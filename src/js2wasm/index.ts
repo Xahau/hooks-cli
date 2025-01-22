@@ -174,16 +174,16 @@ export async function buildWasm(fileObject: any, outDir: string) {
     strip: true,
     files: [fileObject],
   });
+  const baseUrl = process.env.HOOKS_COMPILE_HOST;
+  if (!baseUrl) {
+    throw Error("Environment variable HOOKS_COMPILE_HOST is not set");
+  }
   try {
-    const response = await axios.post(
-      `${process.env.HOOKS_COMPILE_HOST}/api/build/js`,
-      body,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axios.post(`${baseUrl}/api/build/js`, body, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     // Saving response to file
     const responseData = response.data;
     const success = responseData.success === true;
@@ -209,6 +209,6 @@ export async function buildWasm(fileObject: any, outDir: string) {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.log(`Error sending API call: ${error}`);
+    console.error(`Error sending API call: ${error}`);
   }
 }

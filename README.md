@@ -1,4 +1,4 @@
-# Hooks Toolkit CLI
+# Hooks CLI
 
 ## Add .env Variables
 
@@ -11,7 +11,7 @@ Update the `HOOKS_COMPILE_HOST` variable.
 Install:
 
 ```bash
-npm i -g @transia/hooks-toolkit-cli
+npm i -g @transia/hooks-cli
 ```
 
 Use:
@@ -19,13 +19,13 @@ Use:
 You can initialize a new project by running:
 
 ```bash
-hooks-toolkit-cli init
+hooks-cli init
 ```
 
 To build the c contracts, run:
 
 ```bash
-hooks-toolkit-cli compile-c contracts build
+hooks-cli compile-c contracts build
 ```
 
 This will compile the `contracts` directory and output the `.wasm` files into the `build` directory.
@@ -33,7 +33,7 @@ This will compile the `contracts` directory and output the `.wasm` files into th
 To build the js contracts, run:
 
 ```bash
-hooks-toolkit-cli compile-js contracts/base.ts build
+hooks-cli compile-js contracts/base.ts build
 ```
 
 This will compile the `base.ts` file and output the `.bc` file into the `build` directory.
@@ -41,7 +41,7 @@ This will compile the `base.ts` file and output the `.bc` file into the `build` 
 To listen to the debug stream, run:
 
 ```bash
-hooks-toolkit-cli debug "Account 1" rG1QQv2nh2gr7RCZ1P8YYcBUKCCN633jCn
+hooks-cli debug "Account 1" rG1QQv2nh2gr7RCZ1P8YYcBUKCCN633jCn
 ```
 
 ## SDK Usage (For Using as an SDK)
@@ -49,13 +49,13 @@ hooks-toolkit-cli debug "Account 1" rG1QQv2nh2gr7RCZ1P8YYcBUKCCN633jCn
 Install:
 
 ```bash
-npm install @transia/hooks-toolkit-cli
+npm install @transia/hooks-cli
 ```
 
 Usage:
 
 ```javascript
-import { buildDir } from "@transia/hooks-toolkit-cli";
+import { buildDir } from "@transia/hooks-cli";
 
 const dirPath = "my/path/to/hooks/root/dir";
 const outDir = "my/build/wasm/directory";

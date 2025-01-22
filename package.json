@@ -2,9 +2,11 @@
   "name": "@transia/hooks-cli",
   "version": "2.0.0",
   "description": "",
-  "main": "dist/npm/index.js",
+  "main": "dist/npm/src/index.js",
+  "types": "dist/npm/src/index.d.ts",
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "src"
   ],
   "bin": {
     "hooks-cli": "./bin/cli.js"

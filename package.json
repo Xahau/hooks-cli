@@ -1,13 +1,13 @@
 {
-  "name": "@transia/hooks-toolkit-cli",
-  "version": "1.0.5",
+  "name": "@transia/hooks-cli",
+  "version": "2.0.0",
   "description": "",
   "main": "dist/npm/index.js",
   "files": [
     "dist/**/*"
   ],
   "bin": {
-    "hooks-toolkit-cli": "./bin/cli.js"
+    "hooks-cli": "./bin/cli.js"
   },
   "scripts": {
     "build": "tsc && cp -r src/init dist/npm/src",
@@ -17,7 +17,7 @@
   },
   "author": {
     "name": "Denis Angell",
-    "url": "https://github.com/Transia-RnD/xrpl-hooks-compiler"
+    "url": "https://github.com/Transia-RnD/hooks-cli"
   },
   "license": "MIT",
   "dependencies": {

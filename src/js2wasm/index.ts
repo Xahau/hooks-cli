@@ -159,7 +159,7 @@ async function saveFileOrError(
     );
     fs.writeFileSync(
       path.join(outDir + "/" + filename + ".bc"),
-      Buffer.from(Buffer.from(binary).toString(), "hex")
+      Buffer.from(binary)
     );
   }
 }

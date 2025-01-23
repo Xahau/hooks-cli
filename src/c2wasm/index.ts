@@ -165,10 +165,9 @@ export async function buildWasm(fileObject: any, outDir: string) {
       output,
       tasks,
     } as BuildResult;
-    fs.mkdir(outDir, async () => {
-      await saveFileOrError(outDir, filename, result);
-    });
+    fs.mkdirSync(outDir, { recursive: true });
+    await saveFileOrError(outDir, filename, result);
   } catch (error: any) {
-    console.error(`Error sending API call: ${error}`);
+    throw Error(`Error sending API call: ${error}`);
   }
 }

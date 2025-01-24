@@ -9,7 +9,9 @@
     "src"
   ],
   "bin": {
-    "hooks-cli": "./bin/cli.js"
+    "hooks-cli": "./bin/cli.js",
+    "js2wasm-cli": "./bin/js2wasm-cli.js",
+    "c2wasm-cli": "./bin/c2wasm-cli.js"
   },
   "scripts": {
     "build": "tsc && cp -r src/init dist/npm/src",

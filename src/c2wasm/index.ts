@@ -18,7 +18,11 @@ interface BuildResult {
   tasks: Task[];
 }
 
-export async function buildDir(dirPath: string, outDir: string): Promise<void> {
+export async function buildCDir(
+  dirPath: string,
+  outDir: string,
+  headersPath: string | undefined
+): Promise<void> {
   // Reading all files in the directory tree
   let fileObjects: any[];
   try {
@@ -28,11 +32,21 @@ export async function buildDir(dirPath: string, outDir: string): Promise<void> {
     process.exit(1);
   }
 
+  let headerObjects: any[] = [];
+  if (headersPath) {
+    try {
+      headerObjects = readFiles(headersPath);
+    } catch (error: any) {
+      console.error(`Error reading header files: ${error}`);
+      process.exit(1);
+    }
+  }
+
   // Building wasm for each file object
   await Promise.all(
     fileObjects.map(async (fileObject) => {
       try {
-        await buildWasm(fileObject, outDir);
+        await buildWasm(fileObject, headerObjects, outDir);
       } catch (error) {
         console.error(`Error building wasm: ${error}`);
         process.exit(1);
@@ -45,22 +59,31 @@ export async function buildDir(dirPath: string, outDir: string): Promise<void> {
 }
 
 export async function buildFile(
-  dirPath: string,
-  outDir: string
+  filePath: string,
+  outDir: string,
+  headerPath: string | undefined
 ): Promise<void> {
-  const fileContent = fs.readFileSync(dirPath, "utf-8");
-  if (!dirPath.includes(".c")) {
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  if (!filePath.includes(".c")) {
     throw Error("Invalid file type. must be .c file");
   }
-  const filename = dirPath.split("/").pop();
+  const filename = filePath.split("/").pop();
   const fileObject = {
     type: "c",
     name: filename,
-    options: "-O3",
     src: fileContent,
   };
+  let headerObjects: any[] = [];
+  if (headerPath) {
+    try {
+      headerObjects = readFiles(headerPath);
+    } catch (error: any) {
+      console.error(`Error reading header files: ${error}`);
+      process.exit(1);
+    }
+  }
   try {
-    await buildWasm(fileObject, outDir);
+    await buildWasm(fileObject, headerObjects, outDir);
   } catch (error) {
     console.error(`Error building wasm: ${error}`);
     process.exit(1);
@@ -75,13 +98,23 @@ export function readFiles(dirPath: string): any[] {
     const filePath = path.join(dirPath, fileName);
     const fileStat = fs.statSync(filePath);
     if (fileStat.isDirectory()) {
-      files.push(...readFiles(filePath));
+      const ignore = ["node_modules", ".git", ".vscode", ".idea", ".DS_Store"];
+      if (!ignore.includes(fileName)) {
+        files.push(...readFiles(filePath));
+      }
     } else if (path.extname(fileName) === ".c") {
       const fileContent = fs.readFileSync(filePath, "utf-8");
       files.push({
         type: "c",
         name: fileName,
         options: "-O3",
+        src: fileContent,
+      });
+    } else if (path.extname(fileName) === ".h") {
+      const fileContent = fs.readFileSync(filePath, "utf-8");
+      files.push({
+        type: "h",
+        name: fileName,
         src: fileContent,
       });
     }
@@ -126,7 +159,11 @@ async function saveFileOrError(
   }
 }
 
-export async function buildWasm(fileObject: any, outDir: string) {
+export async function buildWasm(
+  fileObject: any,
+  headerObjects: any[],
+  outDir: string
+) {
   const filename = fileObject.name.split(".c")[0];
   // Sending API call to endpoint
   const body = JSON.stringify({
@@ -134,6 +171,7 @@ export async function buildWasm(fileObject: any, outDir: string) {
     compress: true,
     strip: true,
     files: [fileObject],
+    headers: headerObjects,
   });
   const baseUrl = process.env.HOOKS_COMPILE_HOST;
   if (!baseUrl) {

@@ -25,7 +25,13 @@ hooks-cli init
 To build the c contracts, run:
 
 ```bash
-hooks-cli compile-c contracts build
+hooks-cli compile-c contracts build --headers headers
+```
+
+or (alias)
+
+```bash
+c2wasm-cli contracts build --headers headers
 ```
 
 This will compile the `contracts` directory and output the `.wasm` files into the `build` directory.
@@ -34,6 +40,12 @@ To build the js contracts, run:
 
 ```bash
 hooks-cli compile-js contracts/base.ts build
+```
+
+or (alias)
+
+```bash
+js2wasm-cli contracts/base.ts build
 ```
 
 This will compile the `base.ts` file and output the `.bc` file into the `build` directory.

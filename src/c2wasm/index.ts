@@ -35,11 +35,18 @@ export async function buildCDir(
   let headerObjects: any[] = [];
   if (headersPath) {
     try {
-      headerObjects = readFiles(headersPath);
+      headerObjects = readFiles(headersPath).filter(
+        (file) => file.type === "h"
+      );
     } catch (error: any) {
       console.error(`Error reading header files: ${error}`);
       process.exit(1);
     }
+    if (headerObjects.length === 0) {
+      console.log("No header files detected, using default headers...");
+    }
+  } else {
+    console.log("No header path specified, using default headers...");
   }
 
   // Building wasm for each file object
@@ -76,11 +83,16 @@ export async function buildFile(
   let headerObjects: any[] = [];
   if (headerPath) {
     try {
-      headerObjects = readFiles(headerPath);
+      headerObjects = readFiles(headerPath).filter((file) => file.type === "h");
     } catch (error: any) {
       console.error(`Error reading header files: ${error}`);
       process.exit(1);
     }
+    if (headerObjects.length === 0) {
+      console.log("No header files detected, using default headers...");
+    }
+  } else {
+    console.log("No header path specified, using default headers...");
   }
   try {
     await buildWasm(fileObject, headerObjects, outDir);

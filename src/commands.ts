@@ -143,7 +143,7 @@ export const compileJSCommand = async (inPath: string, outDir: string) => {
 export const compileCCommand = async (
   inPath: string,
   outDir: string,
-  headersPath: string | undefined
+  headersPath?: string
 ) => {
   if (!inPath) {
     console.error("Input path is required.");

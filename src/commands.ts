@@ -1,5 +1,5 @@
 import { buildFile as buildJSFile } from "./js2wasm";
-import { buildFile as buildCFile, buildDir as buildCDir } from "./c2wasm";
+import { buildFile as buildCFile, buildCDir } from "./c2wasm";
 import { mkdir, statSync, writeFileSync, readFileSync } from "fs";
 import * as esbuild from "esbuild";
 import * as fs from "fs";
@@ -140,7 +140,11 @@ export const compileJSCommand = async (inPath: string, outDir: string) => {
   }
 };
 
-export const compileCCommand = async (inPath: string, outDir: string) => {
+export const compileCCommand = async (
+  inPath: string,
+  outDir: string,
+  headersPath?: string
+) => {
   if (!inPath) {
     console.error("Input path is required.");
     process.exit(1);
@@ -167,11 +171,19 @@ export const compileCCommand = async (inPath: string, outDir: string) => {
     });
   }
 
+  if (headersPath) {
+    const dirStat = fs.statSync(headersPath);
+    if (!dirStat.isDirectory()) {
+      console.error("headers path must be a directory.");
+      process.exit(1);
+    }
+  }
+
   const dirStat = fs.statSync(inPath);
   if (dirStat.isDirectory()) {
-    await buildCDir(inPath, outDir);
+    await buildCDir(inPath, outDir, headersPath);
   } else {
-    await buildCFile(inPath, outDir);
+    await buildCFile(inPath, outDir, headersPath);
   }
 };
 

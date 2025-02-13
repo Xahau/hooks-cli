@@ -1,4 +1,5 @@
-import ReconnectingWebSocket, { CloseEvent } from "reconnecting-websocket";
+import ReconnectingWebSocket from "reconnecting-websocket";
+import WebSocket from "ws"; // Import the WebSocket implementation for Node.js
 
 export interface ISelect<T = string> {
   label: string;
@@ -18,7 +19,7 @@ const onError = () => {
   console.error("Something went wrong! Check your connection and try again.");
 };
 
-const onClose = (e: CloseEvent) => {
+const onClose = (e: any) => {
   // 999 = closed websocket connection by switching account
   if (e.code !== 4999) {
     console.error(`Connection was closed. [code: ${e.code}]`);
@@ -51,7 +52,11 @@ export const addListeners = (account: ISelect | null) => {
     }
 
     socket = new ReconnectingWebSocket(
-      `${process.env.HOOKS_DEBUG_HOST}/${account.value}`
+      `${process.env.HOOKS_DEBUG_HOST}/${account.value}`,
+      [],
+      {
+        WebSocket: WebSocket,
+      }
     );
 
     socket.addEventListener("open", () => onOpen(account));
@@ -60,10 +65,3 @@ export const addListeners = (account: ISelect | null) => {
     socket.addEventListener("message", onMessage);
   }
 };
-
-// // Example usage
-// const selectedAccount: ISelect | null = {
-//   label: "Account 1",
-//   value: "account1",
-// }; // Replace with actual account selection
-// addListeners(selectedAccount);

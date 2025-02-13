@@ -6,7 +6,6 @@ import {
   compileJSCommand,
   compileCCommand,
   debugCommand,
-  newCredsCommand,
 } from "./commands";
 
 type Target = "c" | "js";
@@ -62,13 +61,6 @@ export async function main(target?: Target) {
       .argument("r-address", "The r-address of the account to debug")
       .showHelpAfterError()
       .action(debugCommand);
-
-    program
-      .command("newcreds")
-      .description("Create new credentials for an account")
-      .argument("name", "The name of the account to create credentials for")
-      .showHelpAfterError()
-      .action(newCredsCommand);
   }
   await program.parseAsync(process.argv);
 }

@@ -1,6 +1,6 @@
 import { buildFile as buildJSFile } from "./js2wasm";
 import { buildFile as buildCFile, buildCDir } from "./c2wasm";
-import { mkdir, statSync, writeFileSync, readFileSync } from "fs";
+import { mkdir, statSync, writeFileSync } from "fs";
 import * as esbuild from "esbuild";
 import * as fs from "fs";
 import * as path from "path";
@@ -48,6 +48,11 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
   fs.mkdirSync(newProjectDir, { recursive: true });
 
   if (type === "c" || type === "js") {
+    // TODO: Remove this when jshooks is merged into mainnet
+    if (type === "js") {
+      process.env.NETWORK_NAME = "jshooks";
+      process.env.NETWORK_DOMAIN = "jshooks.xahau-test.net";
+    }
     copyFiles(templateDir, newProjectDir);
     console.log(
       `Created ${
@@ -56,7 +61,7 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
     );
     try {
       const aliceResponse = await axios.post(
-        "https://jshooks.xahau-test.net/newcreds"
+        `https://${process.env.NETWORK_DOMAIN}/newcreds`
       );
       if (aliceResponse.data.error) {
         console.error(aliceResponse.data.error);
@@ -67,9 +72,9 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
 
         const envFilePath = path.join(newProjectDir, ".env");
         const envObject = {
-          HOOKS_COMPILE_HOST: "https://hook-buildbox.xrpl.org",
-          XRPLD_ENV: "testnet",
-          XRPLD_WSS: "wss://jshooks.xahau-test.net",
+          HOOKS_COMPILE_HOST: process.env.HOOKS_COMPILE_HOST || "",
+          XRPLD_ENV: process.env.NETWORK_NAME || "",
+          XRPLD_WSS: `wss://${process.env.NETWORK_DOMAIN}`,
           ALICE_SEED: aliceSecret,
         };
         const envContent = Object.entries(envObject)
@@ -91,12 +96,12 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
 };
 
 export const compileJSCommand = async (inPath: string, outDir: string) => {
-  if (!inPath) {
+  if (!inPath || inPath === "") {
     console.error("Input path is required.");
     process.exit(1);
   }
 
-  if (!outDir) {
+  if (!outDir || outDir === "") {
     console.error("Output directory path is required.");
     process.exit(1);
   }
@@ -145,12 +150,12 @@ export const compileCCommand = async (
   outDir: string,
   headersPath?: string
 ) => {
-  if (!inPath) {
+  if (!inPath || inPath === "") {
     console.error("Input path is required.");
     process.exit(1);
   }
 
-  if (!outDir) {
+  if (!outDir || outDir === "") {
     console.error("Output directory path is required.");
     process.exit(1);
   }
@@ -197,52 +202,4 @@ export const debugCommand = async (
   };
 
   addListeners(selectedAccount);
-};
-
-export const newCredsCommand = async (name: string) => {
-  if (!name) {
-    console.error(`Invalid name.`);
-    process.exit(1);
-  }
-
-  const envFilePath = path.join(process.cwd(), ".env");
-
-  // Read the existing .env file
-  let envContent = "";
-  try {
-    envContent = readFileSync(envFilePath, "utf-8");
-  } catch (error) {
-    console.error("Error reading .env file:", error);
-    process.exit(1);
-  }
-
-  // Generate a new credential
-  let newSecret;
-  try {
-    const response = await axios.post(
-      "https://jshooks.xahau-test.net/newcreds"
-    );
-    if (response.data.code === "tesSUCCESS") {
-      newSecret = response.data.secret;
-    } else {
-      console.error("Failed to retrieve secret from the server.");
-      process.exit(1);
-    }
-  } catch (error) {
-    console.error("Error making POST request:", error);
-    process.exit(1);
-  }
-
-  // Add the new credential to the .env content
-  const newEnvLine = `${name.toUpperCase()}_SEED=${newSecret}\n`;
-  const updatedEnvContent = envContent + newEnvLine;
-
-  // Write the updated .env file
-  try {
-    writeFileSync(envFilePath, updatedEnvContent, "utf-8");
-    console.log(`Added new credential for ${name} to .env file.`);
-  } catch (error) {
-    console.error("Error writing to .env file:", error);
-    process.exit(1);
-  }
 };

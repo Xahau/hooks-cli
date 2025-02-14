@@ -1,17 +1,11 @@
 # Hooks CLI
 
-## Add .env Variables
-
-Copy the `.env.sample` to `.env`.
-
-Update the `HOOKS_COMPILE_HOST` variable.
-
 ## Global Usage (For Using as a CLI)
 
 Install:
 
 ```bash
-npm i -g @transia/hooks-cli
+npm i -g @xahau/hooks-cli
 ```
 
 Use:
@@ -61,13 +55,13 @@ hooks-cli debug "Account 1" rG1QQv2nh2gr7RCZ1P8YYcBUKCCN633jCn
 Install:
 
 ```bash
-npm install @transia/hooks-cli
+npm install @xahau/hooks-cli
 ```
 
 Usage:
 
 ```javascript
-import { buildDir } from "@transia/hooks-cli";
+import { buildDir } from "@xahau/hooks-cli";
 
 const dirPath = "my/path/to/hooks/root/dir";
 const outDir = "my/build/wasm/directory";

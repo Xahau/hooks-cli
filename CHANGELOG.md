@@ -8,3 +8,9 @@
 ### Added:
 - `headers` build the c contracts using local header files.
 
+
+## [2.0.2] - 2025-02-16
+
+### Fix:
+- `headers` build the c contracts using local header files.
+

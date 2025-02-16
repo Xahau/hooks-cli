@@ -148,15 +148,25 @@ export const compileJSCommand = async (inPath: string, outDir: string) => {
 export const compileCCommand = async (
   inPath: string,
   outDir: string,
-  headersPath?: string
+  args?: Record<string, any>
 ) => {
   if (!inPath || inPath === "") {
     console.error("Input path is required.");
     process.exit(1);
   }
 
+  if (typeof inPath !== "string") {
+    console.error("Input path must be a string.");
+    process.exit(1);
+  }
+
   if (!outDir || outDir === "") {
     console.error("Output directory path is required.");
+    process.exit(1);
+  }
+
+  if (typeof outDir !== "string") {
+    console.error("Output path must be a string.");
     process.exit(1);
   }
 
@@ -176,8 +186,12 @@ export const compileCCommand = async (
     });
   }
 
-  if (headersPath) {
-    const dirStat = fs.statSync(headersPath);
+  if (args.headers) {
+    if (typeof args.headers !== "string") {
+      console.error("headers path must be a string.");
+      process.exit(1);
+    }
+    const dirStat = fs.statSync(args.headers);
     if (!dirStat.isDirectory()) {
       console.error("headers path must be a directory.");
       process.exit(1);
@@ -186,9 +200,9 @@ export const compileCCommand = async (
 
   const dirStat = fs.statSync(inPath);
   if (dirStat.isDirectory()) {
-    await buildCDir(inPath, outDir, headersPath);
+    await buildCDir(inPath, outDir, args.headers);
   } else {
-    await buildCFile(inPath, outDir, headersPath);
+    await buildCFile(inPath, outDir, args.headers);
   }
 };
 

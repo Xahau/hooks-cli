@@ -50,7 +50,7 @@ export async function main(target?: Target) {
       .description("Compile C files")
       .argument("inPath", "The path to the input file or directory")
       .argument("outDir", "The path to the output directory")
-      .option("--headers [path]", "header path (dir)")
+      .option("--headers [path]", "header path (dir)", "")
       .showHelpAfterError()
       .action(compileCCommand);
 

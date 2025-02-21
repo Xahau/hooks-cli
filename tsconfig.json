@@ -11,7 +11,7 @@
      "outDir": "./dist/npm",
      "declaration": true,
      "declarationMap": true,
-     "strictNullChecks": false,
+     "strictNullChecks": true,
      "noImplicitAny": true,
      "noUnusedLocals": true,
      "removeComments": true,

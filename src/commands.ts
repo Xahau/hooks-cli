@@ -186,12 +186,13 @@ export const compileCCommand = async (
     });
   }
 
-  if (args.headers) {
-    if (typeof args.headers !== "string") {
+  const headersPath = args?.headers;
+  if (headersPath) {
+    if (typeof headersPath !== "string") {
       console.error("headers path must be a string.");
       process.exit(1);
     }
-    const dirStat = fs.statSync(args.headers);
+    const dirStat = fs.statSync(headersPath);
     if (!dirStat.isDirectory()) {
       console.error("headers path must be a directory.");
       process.exit(1);
@@ -200,9 +201,9 @@ export const compileCCommand = async (
 
   const dirStat = fs.statSync(inPath);
   if (dirStat.isDirectory()) {
-    await buildCDir(inPath, outDir, args.headers);
+    await buildCDir(inPath, outDir, headersPath);
   } else {
-    await buildCFile(inPath, outDir, args.headers);
+    await buildCFile(inPath, outDir, headersPath);
   }
 };
 

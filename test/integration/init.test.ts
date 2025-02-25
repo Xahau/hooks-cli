@@ -70,7 +70,7 @@ describe("Init Tests", () => {
       // Verify contents of .env file
       const envContent = fs.readFileSync(envFilePath, "utf-8");
       expect(envContent).toContain("HOOKS_COMPILE_HOST");
-      expect(envContent).toContain("XRPLD_ENV");
+      expect(envContent).toContain("XAHAU_ENV");
       expect(envContent).toContain("XRPLD_WSS");
       expect(envContent).toContain("ALICE_SEED=ss8Smfd73swruz4LATV5xkmydjZd6");
     });
@@ -96,7 +96,7 @@ describe("Init Tests", () => {
       // Verify contents of .env file
       const envContent = fs.readFileSync(envFilePath, "utf-8");
       expect(envContent).toContain("HOOKS_COMPILE_HOST");
-      expect(envContent).toContain("XRPLD_ENV");
+      expect(envContent).toContain("XAHAU_ENV");
       expect(envContent).toContain("XRPLD_WSS");
       expect(envContent).toContain("ALICE_SEED=ss8Smfd73swruz4LATV5xkmydjZd6");
     });

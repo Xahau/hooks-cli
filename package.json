@@ -1,6 +1,6 @@
 {
   "name": "@xahau/hooks-cli",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "",
   "main": "dist/npm/src/index.js",
   "types": "dist/npm/src/index.d.ts",
@@ -10,7 +10,7 @@
   ],
   "bin": {
     "hooks-cli": "./bin/cli.js",
-    "js2wasm-cli": "./bin/js2wasm-cli.js",
+    "js2qjsc-cli": "./bin/js2qjsc-cli.js",
     "c2wasm-cli": "./bin/c2wasm-cli.js"
   },
   "scripts": {

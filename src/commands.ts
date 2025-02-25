@@ -1,4 +1,4 @@
-import { buildFile as buildJSFile } from "./js2wasm";
+import { buildFile as buildJSFile } from "./js2qjsc";
 import { buildFile as buildCFile, buildCDir } from "./c2wasm";
 import { mkdir, statSync, writeFileSync } from "fs";
 import * as esbuild from "esbuild";
@@ -73,7 +73,7 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
         const envFilePath = path.join(newProjectDir, ".env");
         const envObject = {
           HOOKS_COMPILE_HOST: process.env.HOOKS_COMPILE_HOST || "",
-          XRPLD_ENV: process.env.NETWORK_NAME || "",
+          XAHAU_ENV: process.env.NETWORK_NAME || "",
           XRPLD_WSS: `wss://${process.env.NETWORK_DOMAIN}`,
           ALICE_SEED: aliceSecret,
         };

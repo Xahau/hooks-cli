@@ -1,10 +1,10 @@
 {
-  "name": "hooks-toolkit-init-c",
+  "name": "hooks-init-c",
   "version": "0.0.1",
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "hooks-toolkit-cli compile-c contracts build/",
+    "build": "hooks-cli compile-c contracts build/",
     "deploy": "yarn run build && ts-node src/index.ts"
   },
   "author": {

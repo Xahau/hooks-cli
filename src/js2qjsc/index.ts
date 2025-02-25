@@ -2,7 +2,7 @@
 import axios from "axios";
 import fs from "fs";
 import path from "path";
-import { decodeBinary } from "../2wasm/decodeBinary";
+import { decodeBinary } from "../2bytes/decodeBinary";
 import { createHash } from "crypto";
 import "dotenv/config";
 

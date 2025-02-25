@@ -39,7 +39,7 @@ hooks-cli compile-js contracts/base.ts build
 or (alias)
 
 ```bash
-js2wasm-cli contracts/base.ts build
+js2qjsc-cli contracts/base.ts build
 ```
 
 This will compile the `base.ts` file and output the `.bc` file into the `build` directory.

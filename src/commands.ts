@@ -1,4 +1,4 @@
-import { buildFile as buildJSFile } from "./js2wasm";
+import { buildFile as buildJSFile } from "./js2qjsc";
 import { buildFile as buildCFile, buildCDir } from "./c2wasm";
 import { mkdir, statSync, writeFileSync } from "fs";
 import * as esbuild from "esbuild";

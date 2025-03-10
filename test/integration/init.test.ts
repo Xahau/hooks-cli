@@ -6,18 +6,24 @@ import axios from "axios";
 jest.mock("axios");
 
 describe("Init Tests", () => {
+  const originalConsoleLog = console.log;
   const originalConsoleError = console.error;
   const originalProcessExit = process.exit;
 
   beforeAll(() => {
+    // Mock console.log to suppress log messages during tests
+    console.log = jest.fn();
     // Mock console.error to suppress error messages during tests
     console.error = jest.fn();
-    // Mock process.exit to prevent exiting during tests
-    process.exit = jest.fn() as any;
+    // replace process.exit with a function that throws an error
+    process.exit = jest.fn(() => {
+      throw Error("Process exit called");
+    });
   });
 
   afterAll(() => {
-    // Restore original console.error and process.exit
+    // Restore original console.log, console.error and process.exit
+    console.log = originalConsoleLog;
     console.error = originalConsoleError;
     process.exit = originalProcessExit;
   });
@@ -58,7 +64,7 @@ describe("Init Tests", () => {
         },
       });
 
-      await initCommand("c", folderNameC);
+      await expect(initCommand("c", folderNameC)).resolves.not.toThrow();
 
       // Verify that the directory was created
       expect(fs.existsSync(projectPathC)).toBe(true);
@@ -84,7 +90,7 @@ describe("Init Tests", () => {
         },
       });
 
-      await initCommand("js", folderNameJS);
+      await expect(initCommand("js", folderNameJS)).resolves.not.toThrow();
 
       // Verify that the directory was created
       expect(fs.existsSync(projectPathJS)).toBe(true);
@@ -105,8 +111,7 @@ describe("Init Tests", () => {
       // Create the directory beforehand to simulate existing directory
       fs.mkdirSync(projectPathC, { recursive: true });
 
-      await initCommand("c", folderNameC);
-
+      await expect(initCommand("c", folderNameC)).rejects.toThrow();
       expect(process.exit).toHaveBeenCalledWith(1);
       expect(console.error).toHaveBeenCalledWith(
         `Directory ${folderNameC} already exists.`

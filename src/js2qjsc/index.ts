@@ -149,6 +149,9 @@ async function saveFileOrError(
     throw Error(result.message);
   } else {
     const binary = await decodeBinary(result.output);
+    if (binary.byteLength === 0) {
+      throw Error("Invalid ts/js code");
+    }
     console.log(
       `Hook Hash: ${ConsoleColor.Green}%s${ConsoleColor.Reset}`,
       `${generateHash(Buffer.from(binary))}`

@@ -30,10 +30,28 @@ const clean = (filePath: string, outputPath?: string): string => {
   cleanedCode = cleanedCode.replace(exportPattern, "");
   cleanedCode = cleanedCode.replace(commentPattern, "");
   cleanedCode = cleanedCode.trim();
+  if (cleanedCode === "") {
+    throw Error("No Hook export found");
+  }
   if (outputPath) {
     fs.writeFileSync(outputPath, cleanedCode, "utf-8");
   }
   return cleanedCode;
+};
+
+const validateJSCode = (filePath: string) => {
+  // In JS code, we don't bundle the code.
+  // Import or export can't be used in JSHooks, so we check the code.
+  const code = fs.readFileSync(filePath, "utf-8");
+  const importPattern = /^\s*import\s+.*?;\s*$/gm;
+  const exportPattern1 = /^\s*export\s*\{[^}]*\};?\s*$/gm; // export { ... }
+  const exportPattern2 = /^\s*export const\s.*?\{[^}]*\};?\s*$/gm; // export const abc(...){...} or export const abc = (...)=>{...}
+  if (importPattern.test(code)) {
+    throw Error("import is not allowed in js code");
+  }
+  if (exportPattern1.test(code) || exportPattern2.test(code)) {
+    throw Error("export is not allowed in js code");
+  }
 };
 
 export const initCommand = async (type: "c" | "js", folderName: string) => {
@@ -141,6 +159,7 @@ export const compileJSCommand = async (inPath: string, outDir: string) => {
   if (dirStat.isDirectory()) {
     throw Error("JS2Wasm Can ONLY build files");
   } else {
+    validateJSCode(inPath);
     await buildJSFile(inPath, outDir);
   }
 };

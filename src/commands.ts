@@ -31,7 +31,8 @@ const clean = (filePath: string, outputPath?: string): string => {
   cleanedCode = cleanedCode.replace(commentPattern, "");
   cleanedCode = cleanedCode.trim();
   if (cleanedCode === "") {
-    throw Error("No Hook export found");
+    console.error("No Hook export found");
+    process.exit(1);
   }
   if (outputPath) {
     fs.writeFileSync(outputPath, cleanedCode, "utf-8");
@@ -47,10 +48,12 @@ const validateJSCode = (filePath: string) => {
   const exportPattern1 = /^\s*export\s*\{[^}]*\};?\s*$/gm; // export { ... }
   const exportPattern2 = /^\s*export const\s.*?\{[^}]*\};?\s*$/gm; // export const abc(...){...} or export const abc = (...)=>{...}
   if (importPattern.test(code)) {
-    throw Error("import is not allowed in js code");
+    console.error("import is not allowed in js code");
+    process.exit(1);
   }
   if (exportPattern1.test(code) || exportPattern2.test(code)) {
-    throw Error("export is not allowed in js code");
+    console.error("export is not allowed in js code");
+    process.exit(1);
   }
 };
 

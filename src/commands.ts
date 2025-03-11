@@ -70,6 +70,8 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
 
   if (type === "c" || type === "js") {
     // TODO: Remove this when jshooks is merged into mainnet
+    process.env.NETWORK_NAME = "testnet";
+    process.env.NETWORK_DOMAIN = "xahau-test.net";
     if (type === "js") {
       process.env.NETWORK_NAME = "jshooks";
       process.env.NETWORK_DOMAIN = "jshooks.xahau-test.net";

@@ -23,3 +23,8 @@
 ### Rename:
 - `js2wasm` -> `js2qjsc`
 
+## [2.0.6] - 2025-05-08
+
+### Added:
+- `--functions` flag to allow for building hooks and functional hooks
+

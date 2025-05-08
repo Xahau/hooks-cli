@@ -21,7 +21,8 @@ interface BuildResult {
 export async function buildCDir(
   dirPath: string,
   outDir: string,
-  headersPath: string | undefined
+  headersPath: string | undefined,
+  isFunctions: boolean
 ): Promise<void> {
   // Reading all files in the directory tree
   let fileObjects: any[];
@@ -53,7 +54,7 @@ export async function buildCDir(
   await Promise.all(
     fileObjects.map(async (fileObject) => {
       try {
-        await buildWasm(fileObject, headerObjects, outDir);
+        await buildWasm(fileObject, headerObjects, outDir, isFunctions);
       } catch (error) {
         console.error(`Error building wasm: ${error}`);
         process.exit(1);
@@ -68,7 +69,8 @@ export async function buildCDir(
 export async function buildFile(
   filePath: string,
   outDir: string,
-  headerPath: string | undefined
+  headerPath: string | undefined,
+  isFunctions: boolean
 ): Promise<void> {
   const fileContent = fs.readFileSync(filePath, "utf-8");
   if (!filePath.includes(".c")) {
@@ -95,7 +97,7 @@ export async function buildFile(
     console.log("No header path specified, using default headers...");
   }
   try {
-    await buildWasm(fileObject, headerObjects, outDir);
+    await buildWasm(fileObject, headerObjects, outDir, isFunctions);
   } catch (error) {
     console.error(`Error building wasm: ${error}`);
     process.exit(1);
@@ -174,7 +176,8 @@ async function saveFileOrError(
 export async function buildWasm(
   fileObject: any,
   headerObjects: any[],
-  outDir: string
+  outDir: string,
+  isFunctions: boolean
 ) {
   const filename = fileObject.name.split(".c")[0];
   // Sending API call to endpoint
@@ -184,6 +187,7 @@ export async function buildWasm(
     strip: true,
     files: [fileObject],
     headers: headerObjects,
+    functions: isFunctions,
   });
   const baseUrl = process.env.HOOKS_COMPILE_HOST;
   if (!baseUrl) {

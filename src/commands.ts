@@ -223,11 +223,13 @@ export const compileCCommand = async (
     }
   }
 
+  const isFunctions = args?.functions || false;
+
   const dirStat = fs.statSync(inPath);
   if (dirStat.isDirectory()) {
-    await buildCDir(inPath, outDir, headersPath);
+    await buildCDir(inPath, outDir, headersPath, isFunctions);
   } else {
-    await buildCFile(inPath, outDir, headersPath);
+    await buildCFile(inPath, outDir, headersPath, isFunctions);
   }
 };
 

@@ -2,6 +2,7 @@ import { initCommand } from "../../src/commands";
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
+import { configDotenv } from "dotenv";
 
 jest.mock("axios");
 
@@ -33,6 +34,8 @@ describe("Init Tests", () => {
     const folderNameJS = "test-js-project";
     const projectPathC = path.join(process.cwd(), folderNameC);
     const projectPathJS = path.join(process.cwd(), folderNameJS);
+    const tempPathC = path.join(__dirname, "..", "..", "src", "init", "c");
+    const tempPathJS = path.join(__dirname, "..", "..", "src", "init", "js");
 
     beforeEach(() => {
       // Clean up any existing directories
@@ -76,9 +79,24 @@ describe("Init Tests", () => {
       // Verify contents of .env file
       const envContent = fs.readFileSync(envFilePath, "utf-8");
       expect(envContent).toContain("HOOKS_COMPILE_HOST");
+      expect(envContent).toContain("HOOKS_DEBUG_HOST");
       expect(envContent).toContain("XAHAU_ENV");
       expect(envContent).toContain("XRPLD_WSS");
       expect(envContent).toContain("ALICE_SEED=ss8Smfd73swruz4LATV5xkmydjZd6");
+
+      const env = configDotenv({ path: envFilePath }).parsed;
+      const originalEnv = configDotenv({
+        path: path.join(tempPathC, ".env"),
+      }).parsed;
+      expect(env?.HOOKS_COMPILE_HOST).toBeDefined();
+      expect(env?.HOOKS_COMPILE_HOST).toEqual(originalEnv?.HOOKS_COMPILE_HOST);
+      expect(env?.HOOKS_DEBUG_HOST).toBeDefined();
+      expect(env?.HOOKS_DEBUG_HOST).toEqual(originalEnv?.HOOKS_DEBUG_HOST);
+      expect(env?.XAHAU_ENV).toBeDefined();
+      expect(env?.XAHAU_ENV).toEqual(originalEnv?.XAHAU_ENV);
+      expect(env?.XRPLD_WSS).toBeDefined();
+      expect(env?.XRPLD_WSS).toEqual(originalEnv?.XRPLD_WSS);
+      expect(env?.ALICE_SEED).toBeDefined();
     });
 
     it("should initialize a new JS project", async () => {
@@ -102,9 +120,24 @@ describe("Init Tests", () => {
       // Verify contents of .env file
       const envContent = fs.readFileSync(envFilePath, "utf-8");
       expect(envContent).toContain("HOOKS_COMPILE_HOST");
+      expect(envContent).toContain("HOOKS_DEBUG_HOST");
       expect(envContent).toContain("XAHAU_ENV");
       expect(envContent).toContain("XRPLD_WSS");
       expect(envContent).toContain("ALICE_SEED=ss8Smfd73swruz4LATV5xkmydjZd6");
+
+      const env = configDotenv({ path: envFilePath }).parsed;
+      const originalEnv = configDotenv({
+        path: path.join(tempPathJS, ".env"),
+      }).parsed;
+      expect(env?.HOOKS_COMPILE_HOST).toBeDefined();
+      expect(env?.HOOKS_COMPILE_HOST).toEqual(originalEnv?.HOOKS_COMPILE_HOST);
+      expect(env?.HOOKS_DEBUG_HOST).toBeDefined();
+      expect(env?.HOOKS_DEBUG_HOST).toEqual(originalEnv?.HOOKS_DEBUG_HOST);
+      expect(env?.XAHAU_ENV).toBeDefined();
+      expect(env?.XAHAU_ENV).toEqual(originalEnv?.XAHAU_ENV);
+      expect(env?.XRPLD_WSS).toBeDefined();
+      expect(env?.XRPLD_WSS).toEqual(originalEnv?.XRPLD_WSS);
+      expect(env?.ALICE_SEED).toBeDefined();
     });
 
     it("should handle existing directory error", async () => {

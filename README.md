@@ -1,4 +1,4 @@
-# Hooks CLI
+# Hooks CLI [![npm version](https://badge.fury.io/js/%40xahau%2Fhooks-cli.svg)](https://www.npmjs.com/package/@xahau/hooks-cli)
 
 ## Global Usage (For Using as a CLI)
 

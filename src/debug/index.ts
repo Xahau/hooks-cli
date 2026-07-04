@@ -1,5 +1,5 @@
 import ReconnectingWebSocket from "reconnecting-websocket";
-import WebSocket from "ws"; // Import the WebSocket implementation for Node.js
+import WebSocket, { CloseEvent, MessageEvent } from "ws"; // Import the WebSocket implementation for Node.js
 
 export interface ISelect<T = string> {
   label: string;
@@ -19,15 +19,14 @@ const onError = () => {
   console.error("Something went wrong! Check your connection and try again.");
 };
 
-const onClose = (e: any) => {
+const onClose = (e: CloseEvent) => {
   // 999 = closed websocket connection by switching account
   if (e.code !== 4999) {
     console.error(`Connection was closed. [code: ${e.code}]`);
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const onMessage = (event: any) => {
+const onMessage = (event: MessageEvent) => {
   // Ping returns just account address, if we get that
   // response we don't need to log anything
   if (event.data !== selectedAccount?.value) {

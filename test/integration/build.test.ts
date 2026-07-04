@@ -37,14 +37,14 @@ describe("Build Tests", () => {
     beforeEach(() => {
       // Ensure output directory does not exist
       if (fs.existsSync(outDir)) {
-        fs.rmdirSync(outDir, { recursive: true });
+        fs.rmSync(outDir, { recursive: true, force: true });
       }
     });
 
     afterEach(() => {
       // Clean up
       if (fs.existsSync(outDir)) {
-        fs.rmdirSync(outDir, { recursive: true });
+        fs.rmSync(outDir, { recursive: true, force: true });
       }
     });
 
@@ -122,14 +122,14 @@ describe("Build Tests", () => {
     beforeEach(() => {
       // Ensure output directory does not exist
       if (fs.existsSync(outDir)) {
-        fs.rmdirSync(outDir, { recursive: true });
+        fs.rmSync(outDir, { recursive: true, force: true });
       }
     });
 
     afterEach(() => {
       // Clean up
       if (fs.existsSync(outDir)) {
-        fs.rmdirSync(outDir, { recursive: true });
+        fs.rmSync(outDir, { recursive: true, force: true });
       }
     });
 

@@ -37,20 +37,20 @@ describe("Init Tests", () => {
     beforeEach(() => {
       // Clean up any existing directories
       if (fs.existsSync(projectPathC)) {
-        fs.rmdirSync(projectPathC, { recursive: true });
+        fs.rmSync(projectPathC, { recursive: true, force: true });
       }
       if (fs.existsSync(projectPathJS)) {
-        fs.rmdirSync(projectPathJS, { recursive: true });
+        fs.rmSync(projectPathJS, { recursive: true, force: true });
       }
     });
 
     afterEach(() => {
       // Clean up created directories
       if (fs.existsSync(projectPathC)) {
-        fs.rmdirSync(projectPathC, { recursive: true });
+        fs.rmSync(projectPathC, { recursive: true, force: true });
       }
       if (fs.existsSync(projectPathJS)) {
-        fs.rmdirSync(projectPathJS, { recursive: true });
+        fs.rmSync(projectPathJS, { recursive: true, force: true });
       }
     });
 

@@ -30,19 +30,17 @@ interface BuildResult {
   tasks: Task[];
 }
 
-function generateHash(dataBytes: Buffer) {
+function generateHash(dataBytes: Uint8Array) {
   const hash = createHash("sha512").update(dataBytes).digest();
-  return hash.slice(0, 32).toString("hex").toUpperCase();
+  return hash.subarray(0, 32).toString("hex").toUpperCase();
 }
 
 export async function buildDir(dirPath: string, outDir: string): Promise<void> {
   // Reading all files in the directory tree
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let fileObjects: any[];
+  let fileObjects: FileObject[];
   try {
     fileObjects = readFiles(dirPath);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error reading files: ${error}`);
     process.exit(1);
   }
@@ -73,8 +71,10 @@ export async function buildFile(
   }
   const filename = dirPath.split("/").pop();
   const filetype = filename?.split(".").pop();
-  const fileObject = {
-    type: filetype,
+  if (!filetype) throw Error("Invalid file type. must be .js or .ts file");
+  if (!filename) throw Error("Invalid file name. must be a file name");
+  const fileObject: FileObject = {
+    type: filetype as "js" | "ts",
     name: filename,
     options: "-O3",
     src: fileContent,
@@ -88,10 +88,8 @@ export async function buildFile(
 }
 
 // Function to read all files in a directory tree
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function readFiles(dirPath: string): any[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const files: any[] = [];
+export function readFiles(dirPath: string): FileObject[] {
+  const files: FileObject[] = [];
   const fileNames = fs.readdirSync(dirPath);
   for (const fileName of fileNames) {
     const filePath = path.join(dirPath, fileName);
@@ -154,7 +152,7 @@ async function saveFileOrError(
     }
     console.log(
       `Hook Hash: ${ConsoleColor.Green}%s${ConsoleColor.Reset}`,
-      `${generateHash(Buffer.from(binary))}`
+      `${generateHash(Uint8Array.from(Buffer.from(binary)))}`
     );
     console.log(
       `Output: ${outDir}${filename}.bc ${ConsoleColor.Blue}%s${ConsoleColor.Reset}`,
@@ -162,13 +160,12 @@ async function saveFileOrError(
     );
     fs.writeFileSync(
       path.join(outDir + "/" + filename + ".bc"),
-      Buffer.from(binary)
+      Uint8Array.from(Buffer.from(binary))
     );
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function buildWasm(fileObject: any, outDir: string) {
+export async function buildWasm(fileObject: FileObject, outDir: string) {
   const filename = fileObject.name.split(".")[0];
   // Sending API call to endpoint
   const body = JSON.stringify({
@@ -209,8 +206,7 @@ export async function buildWasm(fileObject: any, outDir: string) {
     } as BuildResult;
     fs.mkdirSync(outDir, { recursive: true });
     await saveFileOrError(outDir, filename, result);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+  } catch (error: unknown) {
     throw Error(`Error sending API call: ${error}`);
   }
 }

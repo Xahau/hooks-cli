@@ -6,6 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { addListeners, ISelect } from "./debug";
 import axios from "axios";
+import dotenv from "dotenv";
 
 const copyFiles = (source: string, destination: string) => {
   fs.readdirSync(source).forEach((file) => {
@@ -69,13 +70,6 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
   fs.mkdirSync(newProjectDir, { recursive: true });
 
   if (type === "c" || type === "js") {
-    // TODO: Remove this when jshooks is merged into mainnet
-    process.env.NETWORK_NAME = "testnet";
-    process.env.NETWORK_DOMAIN = "xahau-test.net";
-    if (type === "js") {
-      process.env.NETWORK_NAME = "jshooks";
-      process.env.NETWORK_DOMAIN = "jshooks.xahau-test.net";
-    }
     copyFiles(templateDir, newProjectDir);
     console.log(
       `Created ${
@@ -83,8 +77,16 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
       } project in ${newProjectDir}`
     );
     try {
+      const projectEnv = dotenv.config({
+        path: path.join(newProjectDir, ".env"),
+      });
+      if (!projectEnv.parsed) {
+        console.log("No .env file found in the project template.");
+        process.exit(1);
+      }
+      const env = projectEnv.parsed;
       const aliceResponse = await axios.post(
-        `https://${process.env.NETWORK_DOMAIN}/newcreds`
+        `https://${env.XRPLD_WSS.replace("wss://", "")}/newcreds`
       );
       if (aliceResponse.data.error) {
         console.error(aliceResponse.data.error);
@@ -95,9 +97,7 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
 
         const envFilePath = path.join(newProjectDir, ".env");
         const envObject = {
-          HOOKS_COMPILE_HOST: process.env.HOOKS_COMPILE_HOST || "",
-          XAHAU_ENV: process.env.NETWORK_NAME || "",
-          XRPLD_WSS: `wss://${process.env.NETWORK_DOMAIN}`,
+          ...env,
           ALICE_SEED: aliceSecret,
         };
         const envContent = Object.entries(envObject)
@@ -223,13 +223,13 @@ export const compileCCommand = async (
     }
   }
 
-  const isFunctions = args?.functions || false;
+  const isXRPL = args?.xrpl || false;
 
   const dirStat = fs.statSync(inPath);
   if (dirStat.isDirectory()) {
-    await buildCDir(inPath, outDir, headersPath, isFunctions);
+    await buildCDir(inPath, outDir, headersPath, isXRPL);
   } else {
-    await buildCFile(inPath, outDir, headersPath, isFunctions);
+    await buildCFile(inPath, outDir, headersPath, isXRPL);
   }
 };
 

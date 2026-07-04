@@ -19,7 +19,7 @@ export async function main(target?: Target) {
       .argument("inPath", "The path to the input file or directory")
       .argument("outDir", "The path to the output directory")
       .option("--headers [path]", "header path (dir)")
-      .option("--functions", "Enable functions", false)
+      .option("--xrpl", "XRPL Builds", false)
       .showHelpAfterError()
       .action(compileCCommand);
   } else if (target === "js") {
@@ -52,7 +52,7 @@ export async function main(target?: Target) {
       .argument("inPath", "The path to the input file or directory")
       .argument("outDir", "The path to the output directory")
       .option("--headers [path]", "header path (dir)", "")
-      .option("--functions", "Enable functions", false)
+      .option("--xrpl", "XRPL Builds", false)
       .showHelpAfterError()
       .action(compileCCommand);
 

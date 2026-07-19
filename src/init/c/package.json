@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "hooks-cli compile-c contracts build/",
+    "build": "hooks-cli compile-c contracts build/ --headers contracts/include",
     "deploy": "yarn run build && ts-node src/index.ts"
   },
   "author": {

@@ -38,6 +38,8 @@ describe("Init Tests", () => {
     const tempPathJS = path.join(__dirname, "..", "..", "src", "init", "js");
 
     beforeEach(() => {
+      jest.clearAllMocks();
+
       // Clean up any existing directories
       if (fs.existsSync(projectPathC)) {
         fs.rmSync(projectPathC, { recursive: true, force: true });
@@ -58,8 +60,16 @@ describe("Init Tests", () => {
     });
 
     it("should initialize a new C project", async () => {
-      // Mock axios response
-      jest.mock("axios");
+      const headerFiles = {
+        error: "#define INTERNAL_ERROR -2\n",
+        extern: "extern int64_t accept(uint32_t, uint32_t, int64_t);\n",
+        hookapi: '#include "macro.h"\n',
+        macro: "#define SBUF(str) (uint32_t)(str), sizeof(str)\n",
+        sfcodes: "#define sfAccount ((8U << 16U) + 1U)\n",
+        tts: "#define ttINVOKE 99\n",
+      };
+
+      (axios.get as jest.Mock).mockResolvedValue({ data: headerFiles });
       (axios.post as jest.Mock).mockResolvedValue({
         data: {
           code: "tesSUCCESS",
@@ -97,6 +107,30 @@ describe("Init Tests", () => {
       expect(env?.XRPLD_WSS).toBeDefined();
       expect(env?.XRPLD_WSS).toEqual(originalEnv?.XRPLD_WSS);
       expect(env?.ALICE_SEED).toBeDefined();
+
+      expect(axios.get).toHaveBeenCalledWith(
+        `${originalEnv?.HOOKS_COMPILE_HOST}/api/header-files`
+      );
+
+      const includePath = path.join(projectPathC, "contracts", "include");
+      expect(fs.statSync(includePath).isDirectory()).toBe(true);
+      expect(fs.readdirSync(includePath).sort()).toEqual(
+        Object.keys(headerFiles)
+          .map((name) => `${name}.h`)
+          .sort()
+      );
+      Object.entries(headerFiles).forEach(([name, content]) => {
+        expect(
+          fs.readFileSync(path.join(includePath, `${name}.h`), "utf-8")
+        ).toBe(content);
+      });
+
+      const generatedPackage = JSON.parse(
+        fs.readFileSync(path.join(projectPathC, "package.json"), "utf-8")
+      );
+      expect(generatedPackage.scripts.build).toBe(
+        "hooks-cli compile-c contracts build/ --headers contracts/include"
+      );
     });
 
     it("should initialize a new JS project", async () => {
@@ -109,6 +143,8 @@ describe("Init Tests", () => {
       });
 
       await expect(initCommand("js", folderNameJS)).resolves.not.toThrow();
+
+      expect(axios.get).not.toHaveBeenCalled();
 
       // Verify that the directory was created
       expect(fs.existsSync(projectPathJS)).toBe(true);
@@ -138,6 +174,27 @@ describe("Init Tests", () => {
       expect(env?.XRPLD_WSS).toBeDefined();
       expect(env?.XRPLD_WSS).toEqual(originalEnv?.XRPLD_WSS);
       expect(env?.ALICE_SEED).toBeDefined();
+    });
+
+    it("should fail C initialization when a required header is missing", async () => {
+      (axios.get as jest.Mock).mockResolvedValue({
+        data: {
+          error: "error",
+          extern: "extern",
+          hookapi: "hookapi",
+          macro: "macro",
+          sfcodes: "sfcodes",
+        },
+      });
+
+      await expect(initCommand("c", folderNameC)).rejects.toThrow(
+        "Missing or invalid header file: tts.h"
+      );
+
+      expect(axios.post).not.toHaveBeenCalled();
+      expect(
+        fs.existsSync(path.join(projectPathC, "contracts", "include"))
+      ).toBe(false);
     });
 
     it("should handle existing directory error", async () => {

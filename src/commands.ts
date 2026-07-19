@@ -22,6 +22,41 @@ const copyFiles = (source: string, destination: string) => {
   });
 };
 
+const downloadCHeaderFiles = async (
+  compileHost: string,
+  projectDir: string
+): Promise<void> => {
+  const headerNames = [
+    "error",
+    "extern",
+    "hookapi",
+    "macro",
+    "sfcodes",
+    "tts",
+  ] as const;
+  const response = await axios.get(
+    `${compileHost.replace(/\/+$/, "")}/api/header-files`
+  );
+  const headerFiles = response.data;
+  if (!headerFiles || typeof headerFiles !== "object") {
+    throw Error("Invalid header files response from the compile server");
+  }
+
+  const files = headerNames.map((name) => {
+    const content = headerFiles[name];
+    if (typeof content !== "string" || content.length === 0) {
+      throw Error(`Missing or invalid header file: ${name}.h`);
+    }
+    return { filename: `${name}.h`, content };
+  });
+
+  const includeDir = path.join(projectDir, "contracts", "include");
+  fs.mkdirSync(includeDir, { recursive: true });
+  files.forEach(({ filename, content }) => {
+    fs.writeFileSync(path.join(includeDir, filename), content, "utf-8");
+  });
+};
+
 const clean = (filePath: string, outputPath?: string): string => {
   const tsCode = fs.readFileSync(filePath, "utf-8");
   const importPattern = /^\s*import\s+.*?;\s*$/gm;
@@ -76,15 +111,28 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
         type === "c" ? "CHooks" : "JSHooks"
       } project in ${newProjectDir}`
     );
-    try {
-      const projectEnv = dotenv.config({
-        path: path.join(newProjectDir, ".env"),
-      });
-      if (!projectEnv.parsed) {
-        console.log("No .env file found in the project template.");
-        process.exit(1);
+    const projectEnv = dotenv.config({
+      path: path.join(newProjectDir, ".env"),
+    });
+    if (!projectEnv.parsed) {
+      console.log("No .env file found in the project template.");
+      process.exit(1);
+    }
+    const env = projectEnv.parsed;
+    if (type === "c") {
+      const compileHost = env.HOOKS_COMPILE_HOST;
+      if (!compileHost) {
+        throw Error("HOOKS_COMPILE_HOST is not set in the project template");
       }
-      const env = projectEnv.parsed;
+      try {
+        await downloadCHeaderFiles(compileHost, newProjectDir);
+        console.log("Header files saved to contracts/include.");
+      } catch (error) {
+        console.error("Error downloading header files:", error);
+        throw error;
+      }
+    }
+    try {
       const aliceResponse = await axios.post(
         `https://${env.XRPLD_WSS.replace("wss://", "")}/newcreds`
       );

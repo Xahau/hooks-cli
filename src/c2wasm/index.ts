@@ -18,14 +18,14 @@ interface BuildResult {
   tasks: Task[];
 }
 
-const getCustomHeader = (headersPath: string | undefined): any[] => {
-  let headerObjects: any[] = [];
+const getCustomHeader = (headersPath: string | undefined): FileObject[] => {
+  let headerObjects: FileObject[] = [];
   if (headersPath) {
     try {
       headerObjects = readFiles(headersPath).filter(
         (file) => file.type === "h"
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error reading header files: ${error}`);
       process.exit(1);
     }
@@ -51,10 +51,10 @@ export async function buildCDir(
   isXRPL: boolean
 ): Promise<void> {
   // Reading all files in the directory tree
-  let fileObjects: any[];
+  let fileObjects: FileObject[];
   try {
     fileObjects = readFiles(dirPath).filter((file) => file.type === "c");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error reading files: ${error}`);
     process.exit(1);
   }
@@ -88,14 +88,13 @@ export async function buildFile(
     throw Error("Invalid file type. must be .c file");
   }
   const filename = filePath.split("/").pop();
-  const fileObject = {
+  if (!filename) throw Error("Invalid file name. must be a file name");
+  const fileObject: FileObject = {
     type: "c",
     name: filename,
     src: fileContent,
   };
-
   const headerObjects = getCustomHeader(headerPath);
-
   try {
     await buildWasm(fileObject, headerObjects, outDir, isXRPL);
   } catch (error) {
@@ -105,8 +104,8 @@ export async function buildFile(
 }
 
 // Function to read all files in a directory tree
-export function readFiles(dirPath: string): any[] {
-  const files: any[] = [];
+export function readFiles(dirPath: string): FileObject[] {
+  const files: FileObject[] = [];
   const fileNames = fs.readdirSync(dirPath);
   for (const fileName of fileNames) {
     const filePath = path.join(dirPath, fileName);
@@ -168,14 +167,14 @@ async function saveFileOrError(
     const binary = await decodeBinary(result.output);
     fs.writeFileSync(
       path.join(outDir + "/" + filename + ".wasm"),
-      Buffer.from(binary)
+      Uint8Array.from(Buffer.from(binary))
     );
   }
 }
 
 export async function buildWasm(
-  fileObject: any,
-  headerObjects: any[],
+  fileObject: FileObject,
+  headerObjects: FileObject[],
   outDir: string,
   isXRPL: boolean
 ) {
@@ -221,7 +220,7 @@ export async function buildWasm(
     } as BuildResult;
     fs.mkdirSync(outDir, { recursive: true });
     await saveFileOrError(outDir, filename, result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     throw Error(`Error sending API call: ${error}`);
   }
 }

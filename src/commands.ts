@@ -180,7 +180,7 @@ export const compileJSCommand = async (inPath: string, outDir: string) => {
       console.error("Output path must be a directory.");
       process.exit(1);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     mkdir(outDir, { recursive: true }, (err) => {
       if (err) {
         console.error(`Failed to create directory: ${outDir}`);
@@ -245,7 +245,7 @@ export const compileCCommand = async (
       console.error("Output path must be a directory.");
       process.exit(1);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     mkdir(outDir, { recursive: true }, (err) => {
       if (err) {
         console.error(`Failed to create directory: ${outDir}`);

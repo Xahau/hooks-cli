@@ -4,6 +4,7 @@ module.exports = {
   testEnvironment: "node",
   testMatch: ["**/test/integration/**/*.test.ts"],
   testPathIgnorePatterns: ["binaryen"],
+  modulePathIgnorePatterns: ["<rootDir>/dist/"],
 
   // Set the timeout value for all tests to 2 minutes (default is 5 seconds)
   testTimeout: 120000,

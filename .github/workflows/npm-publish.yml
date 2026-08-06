@@ -1,0 +1,74 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to publish (e.g. v1.2.3 or 1.2.3). Must match package.json "version".'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run (does not publish to npm or create a GitHub release)'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Update npm (OIDC trusted publishing requires npm >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Verify version matches package.json
+        run: |
+          INPUT_VERSION="${{ inputs.version }}"
+          NORMALIZED_INPUT="${INPUT_VERSION#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+
+          if [ "$NORMALIZED_INPUT" != "$PKG_VERSION" ]; then
+            echo "::error::Version mismatch: input version '${INPUT_VERSION}' does not match package.json version '${PKG_VERSION}'"
+            exit 1
+          fi
+
+          echo "Version check passed: ${PKG_VERSION}"
+          echo "RELEASE_TAG=v${PKG_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn run build
+
+      - name: Publish to npm (dry run)
+        if: ${{ inputs.dry_run }}
+        run: npm publish --access public --dry-run
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry_run }}
+        run: npm publish --access public --provenance
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${RELEASE_TAG}" \
+            --title "${RELEASE_TAG}" \
+            --generate-notes \
+            --target "${{ github.sha }}"

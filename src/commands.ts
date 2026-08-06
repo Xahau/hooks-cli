@@ -8,6 +8,30 @@ import { addListeners, ISelect } from "./debug";
 import axios from "axios";
 import dotenv from "dotenv";
 
+export type PackageManager = "npm" | "yarn" | "pnpm";
+const PACKAGE_MANAGERS: PackageManager[] = ["npm", "yarn", "pnpm"];
+
+const applyPackageManager = (
+  projectDir: string,
+  packageManager: PackageManager
+) => {
+  const packageJsonPath = path.join(projectDir, "package.json");
+  const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+  if (pkg.scripts) {
+    for (const name of Object.keys(pkg.scripts)) {
+      pkg.scripts[name] = pkg.scripts[name].replace(
+        /\bnpm\b/g,
+        packageManager
+      );
+    }
+  }
+  fs.writeFileSync(
+    packageJsonPath,
+    `${JSON.stringify(pkg, null, 2)}\n`,
+    "utf-8"
+  );
+};
+
 const copyFiles = (source: string, destination: string) => {
   fs.readdirSync(source).forEach((file) => {
     const srcFile = path.join(source, file);
@@ -90,7 +114,22 @@ const validateJSCode = (filePath: string) => {
   }
 };
 
-export const initCommand = async (type: "c" | "js", folderName: string) => {
+export const initCommand = async (
+  type: "c" | "js",
+  folderName: string,
+  options?: { packageManager?: string }
+) => {
+  const packageManager = (options?.packageManager ??
+    "npm") as PackageManager;
+  if (!PACKAGE_MANAGERS.includes(packageManager)) {
+    console.error(
+      `Invalid package manager "${packageManager}". Use one of: ${PACKAGE_MANAGERS.join(
+        ", "
+      )}.`
+    );
+    process.exit(1);
+  }
+
   const templateDir = path.join(__dirname, "init", type);
   const newProjectDir = path.join(process.cwd(), folderName);
 
@@ -103,6 +142,7 @@ export const initCommand = async (type: "c" | "js", folderName: string) => {
 
   if (type === "c" || type === "js") {
     copyFiles(templateDir, newProjectDir);
+    applyPackageManager(newProjectDir, packageManager);
     console.log(
       `Created ${
         type === "c" ? "CHooks" : "JSHooks"

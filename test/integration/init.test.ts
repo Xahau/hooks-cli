@@ -131,6 +131,10 @@ describe("Init Tests", () => {
       expect(generatedPackage.scripts.build).toBe(
         "hooks-cli compile-c contracts build/ --headers contracts/include"
       );
+      // Defaults to npm when no package manager is specified.
+      expect(generatedPackage.scripts.deploy).toBe(
+        "npm run build && ts-node src/index.ts"
+      );
     });
 
     it("should initialize a new JS project", async () => {
@@ -207,6 +211,45 @@ describe("Init Tests", () => {
       expect(console.error).toHaveBeenCalledWith(
         `Directory ${folderNameC} already exists.`
       );
+    });
+
+    describe.each(["npm", "yarn", "pnpm"])(
+      "packageManager=%s",
+      (packageManager) => {
+        it(`should rewrite the deploy script to use ${packageManager}`, async () => {
+          (axios.post as jest.Mock).mockResolvedValue({
+            data: {
+              code: "tesSUCCESS",
+              secret: "ss8Smfd73swruz4LATV5xkmydjZd6",
+            },
+          });
+
+          await expect(
+            initCommand("js", folderNameJS, { packageManager })
+          ).resolves.not.toThrow();
+
+          const generatedPackage = JSON.parse(
+            fs.readFileSync(
+              path.join(projectPathJS, "package.json"),
+              "utf-8"
+            )
+          );
+          expect(generatedPackage.scripts.deploy).toBe(
+            `${packageManager} run build && ts-node src/index.ts`
+          );
+        });
+      }
+    );
+
+    it("should reject an unsupported package manager", async () => {
+      await expect(
+        initCommand("c", folderNameC, { packageManager: "bun" })
+      ).rejects.toThrow();
+      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(console.error).toHaveBeenCalledWith(
+        'Invalid package manager "bun". Use one of: npm, yarn, pnpm.'
+      );
+      expect(fs.existsSync(projectPathC)).toBe(false);
     });
   });
 });

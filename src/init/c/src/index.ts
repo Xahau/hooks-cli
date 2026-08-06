@@ -1,23 +1,17 @@
-import {
-  Client,
-  Wallet,
-  Invoke,
-  SetHookFlags,
-  TransactionMetadata,
-} from "@transia/xrpl";
+import { Client, Wallet, Invoke, TransactionMetadata } from "xahau";
+import { HookFlags } from "xahau/dist/npm/models/common/xahau";
 import {
   createHookPayload,
-  setHooksV3,
+  setHooks,
   SetHookParams,
   Xrpld,
   ExecutionUtility,
-} from "@transia/hooks-toolkit";
+} from "@xahau/hooks-toolkit";
 import "dotenv/config";
 
 export async function main(): Promise<void> {
   const client = new Client(process.env.XRPLD_WSS || "");
   await client.connect();
-  client.networkID = await client.getNetworkID();
 
   const aliceWallet = Wallet.fromSeed(process.env.ALICE_SEED || "");
 
@@ -25,13 +19,13 @@ export async function main(): Promise<void> {
     version: 0,
     createFile: "base",
     namespace: "base",
-    flags: SetHookFlags.hsfOverride,
+    flags: HookFlags.hsfOverride,
     hookOnArray: ["Invoke"],
   });
 
-  await setHooksV3({
+  await setHooks({
     client: client,
-    seed: aliceWallet.seed,
+    wallet: aliceWallet,
     hooks: [{ Hook: hook }],
   } as SetHookParams);
 

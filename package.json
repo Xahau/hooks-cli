@@ -1,7 +1,12 @@
 {
   "name": "@xahau/hooks-cli",
   "version": "2.1.0",
-  "description": "",
+  "description": "Hooks CLI is a tool for compiling hooks to Xahau's smart contract format",
+  "keywords": [
+    "xahau",
+    "hooks",
+    "smart contract"
+  ],
   "main": "dist/npm/src/index.js",
   "types": "dist/npm/src/index.d.ts",
   "files": [
@@ -21,7 +26,15 @@
   },
   "author": {
     "name": "Denis Angell",
-    "url": "https://github.com/Transia-RnD/hooks-cli"
+    "url": "https://github.com/Xahau/hooks-cli"
+  },
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Xahau/hooks-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Xahau/hooks-cli/issues"
   },
   "license": "MIT",
   "dependencies": {

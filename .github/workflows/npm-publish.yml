@@ -30,10 +30,10 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '22.x'
-          registry-url: 'https://registry.npmjs.org'
+          cache: yarn
 
-      - name: Update npm (OIDC trusted publishing requires npm >= 11.5.1)
-        run: npm install -g npm@latest
+      - name: Update npm for OIDC trusted publishing
+        run: npm install --global npm@latest
 
       - name: Verify version matches package.json
         run: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Publish to npm
         if: ${{ !inputs.dry_run }}
-        run: npm publish --access public --provenance
+        run: npm publish --access public
 
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run }}

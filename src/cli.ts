@@ -35,6 +35,11 @@ export async function main(target?: Target) {
       .description("Initialize a new project")
       .argument("type", "The type of project to initialize, 'c' or 'js'")
       .argument("folderName", "The name of the folder to initialize")
+      .option(
+        "-p, --package-manager <manager>",
+        "The package manager to use in the generated project ('npm', 'yarn', or 'pnpm')",
+        "npm"
+      )
       .showHelpAfterError()
       .action(initCommand);
 

@@ -7,10 +7,10 @@ import axios from "axios";
 
 jest.mock("axios");
 
-// These tests exercise the actual `yarn install` / `yarn run build` flow of a
-// freshly generated project (as an end user would run them), so they need
-// real network access to the npm registry and a longer timeout than the
-// other integration tests.
+// These tests exercise the actual `<pm> install` / `<pm> run build` flow of a
+// freshly generated project for each supported package manager (as an end
+// user would run them), so they need real network access to the npm
+// registry and a longer timeout than the other integration tests.
 describe("Init project install/build", () => {
   const repoRoot = path.join(__dirname, "..", "..");
   const binDir = path.join(repoRoot, "bin");
@@ -47,17 +47,26 @@ describe("Init project install/build", () => {
     tts: "#define ttINVOKE 99\n",
   };
 
-  const runInProject = (projectDir: string, args: string[]) =>
-    execFileSync("yarn", args, {
+  const runInProject = (
+    projectDir: string,
+    packageManager: string,
+    args: string[]
+  ) =>
+    execFileSync(packageManager, args, {
       cwd: projectDir,
       env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` },
       stdio: "pipe",
     });
 
   describe.each([
-    ["c", "e2e-init-build-c-project"],
-    ["js", "e2e-init-build-js-project"],
-  ])("%s project", (type, folderName) => {
+    ["c", "npm"],
+    ["c", "yarn"],
+    ["c", "pnpm"],
+    ["js", "npm"],
+    ["js", "yarn"],
+    ["js", "pnpm"],
+  ])("%s project (%s)", (type, packageManager) => {
+    const folderName = `e2e-init-build-${type}-${packageManager}-project`;
     // Generated deliberately outside the repo tree (rather than e.g. a
     // subdirectory of repoRoot): initCommand's copyFiles gives the project
     // its own node_modules, but Node's require() resolution still walks up
@@ -92,7 +101,9 @@ describe("Init project install/build", () => {
         const originalCwd = process.cwd();
         process.chdir(tmpBase);
         try {
-          await initCommand(type as "c" | "js", folderName);
+          await initCommand(type as "c" | "js", folderName, {
+            packageManager,
+          });
         } finally {
           process.chdir(originalCwd);
         }
@@ -111,12 +122,12 @@ describe("Init project install/build", () => {
         }
 
         try {
-          runInProject(projectPath, ["install"]);
-          runInProject(projectPath, ["run", "build"]);
+          runInProject(projectPath, packageManager, ["install"]);
+          runInProject(projectPath, packageManager, ["run", "build"]);
         } catch (error: unknown) {
           const err = error as { stdout?: Buffer; stderr?: Buffer };
           throw new Error(
-            `yarn install/build failed for ${type} project:\n${err.stdout?.toString()}\n${err.stderr?.toString()}`
+            `${packageManager} install/build failed for ${type} project:\n${err.stdout?.toString()}\n${err.stderr?.toString()}`
           );
         }
 

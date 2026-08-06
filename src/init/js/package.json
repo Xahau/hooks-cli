@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "hooks-cli compile-js contracts/base.ts build/",
-    "deploy": "yarn run build && ts-node src/index.ts"
+    "deploy": "npm run build && ts-node src/index.ts"
   },
   "license": "ISC",
   "dependencies": {

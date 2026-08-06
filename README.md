@@ -13,7 +13,13 @@ Use:
 You can initialize a new project by running:
 
 ```bash
-hooks-cli init
+hooks-cli init <c|js> <folderName>
+```
+
+By default, the generated project's scripts use `npm`. To use `yarn` or `pnpm` instead, pass `--package-manager`:
+
+```bash
+hooks-cli init js my-project --package-manager pnpm
 ```
 
 To build the c contracts, run:

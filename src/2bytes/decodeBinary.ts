@@ -3,7 +3,7 @@ import { isZlibData, decompressZlib } from "./zlib";
 import { fromByteArray } from "base64-js";
 
 export async function decodeBinary(input: string): Promise<ArrayBuffer> {
-  let data = decodeRestrictedBase64ToBytes(input);
+  let data: Uint8Array = decodeRestrictedBase64ToBytes(input);
   if (isZlibData(data)) {
     data = await decompressZlib(data);
   }

@@ -10,6 +10,7 @@ import * as path from "path";
 describe("Build Tests", () => {
   const originalConsoleLog = console.log;
   const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
   const originalProcessExit = process.exit;
 
   beforeAll(() => {
@@ -17,6 +18,8 @@ describe("Build Tests", () => {
     console.log = jest.fn();
     // Mock console.error to suppress error messages during tests
     console.error = jest.fn();
+    // Mock console.warn to suppress warning messages during tests
+    console.warn = jest.fn();
     // replace process.exit with a function that throws an error
     process.exit = jest.fn(() => {
       throw Error("Process exit called");
@@ -24,9 +27,10 @@ describe("Build Tests", () => {
   });
 
   afterAll(() => {
-    // Restore original console.log, console.error and process.exit
+    // Restore original console.log, console.error, console.warn and process.exit
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
     process.exit = originalProcessExit;
   });
 

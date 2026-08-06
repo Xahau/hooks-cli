@@ -7,15 +7,12 @@
     "build": "hooks-cli compile-js contracts/base.ts build/",
     "deploy": "yarn run build && ts-node src/index.ts"
   },
-  "author": {
-    "name": "Denis Angell",
-    "url": "https://github.com/dangell7"
-  },
   "license": "ISC",
   "dependencies": {
-    "@transia/hooks-toolkit": "^2.0.0-alpha.4",
+    "@xahau/hooks-toolkit": "^2.0.0-alpha.4",
     "dotenv": "^16.3.1",
-    "jshooks-api": "^1.0.5"
+    "jshooks-api": "^1.0.5",
+    "xahau": "^4.1.1"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",

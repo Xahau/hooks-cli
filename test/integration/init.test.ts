@@ -133,7 +133,7 @@ describe("Init Tests", () => {
       );
       // Defaults to npm when no package manager is specified.
       expect(generatedPackage.scripts.deploy).toBe(
-        "npm run build && ts-node src/index.ts"
+        "npm run build && tsx src/index.ts"
       );
     });
 
@@ -235,7 +235,7 @@ describe("Init Tests", () => {
             )
           );
           expect(generatedPackage.scripts.deploy).toBe(
-            `${packageManager} run build && ts-node src/index.ts`
+            `${packageManager} run build && tsx src/index.ts`
           );
         });
       }

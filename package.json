@@ -41,7 +41,7 @@
     "axios": "^1.3.4",
     "base64-js": "^1.5.1",
     "commander": "^10.0.1",
-    "dotenv": "^16.1.4",
+    "dotenv": "^17.4.2",
     "esbuild": "^0.21.4",
     "pako": "^2.1.0",
     "reconnecting-websocket": "^4.4.0",

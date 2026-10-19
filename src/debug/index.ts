@@ -1,5 +1,5 @@
 import ReconnectingWebSocket from "reconnecting-websocket";
-import WebSocket, { CloseEvent } from "ws"; // Import the WebSocket implementation for Node.js
+import WebSocket, { CloseEvent, MessageEvent } from "ws"; // Import the WebSocket implementation for Node.js
 
 export interface ISelect<T = string> {
   label: string;
@@ -26,7 +26,8 @@ const onClose = (e: CloseEvent) => {
   }
 };
 
-const onMessage = (event: globalThis.MessageEvent) => {
+// reconnecting-websocket types listeners with the DOM MessageEvent, which lacks `data` under node16 resolution.
+const onMessage = (event: MessageEvent) => {
   // Ping returns just account address, if we get that
   // response we don't need to log anything
   if (event.data !== selectedAccount?.value) {
@@ -47,7 +48,7 @@ export const addListeners = (account: ISelect | null) => {
       socket.removeEventListener("open", () => onOpen(account));
       socket.removeEventListener("close", onClose);
       socket.removeEventListener("error", onError);
-      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("message", onMessage as never);
     }
 
     socket = new ReconnectingWebSocket(
@@ -61,6 +62,6 @@ export const addListeners = (account: ISelect | null) => {
     socket.addEventListener("open", () => onOpen(account));
     socket.addEventListener("close", onClose);
     socket.addEventListener("error", onError);
-    socket.addEventListener("message", onMessage);
+    socket.addEventListener("message", onMessage as never);
   }
 };

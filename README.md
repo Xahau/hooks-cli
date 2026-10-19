@@ -13,13 +13,13 @@ Use:
 You can initialize a new project by running:
 
 ```bash
-hooks-cli init <c|js> <folderName>
+hooks-cli init <c> <folderName>
 ```
 
 By default, the generated project's scripts use `npm`. To use `yarn` or `pnpm` instead, pass `--package-manager`:
 
 ```bash
-hooks-cli init js my-project --package-manager pnpm
+hooks-cli init c my-project --package-manager pnpm
 ```
 
 To build the c contracts, run:
@@ -36,19 +36,7 @@ c2wasm-cli contracts build --headers headers
 
 This will compile the `contracts` directory and output the `.wasm` files into the `build` directory.
 
-To build the js contracts, run:
-
-```bash
-hooks-cli compile-js contracts/base.ts build
-```
-
-or (alias)
-
-```bash
-js2qjsc-cli contracts/base.ts build
-```
-
-This will compile the `base.ts` file and output the `.bc` file into the `build` directory.
+Compilation runs locally via [hooks-compiler](https://www.npmjs.com/package/hooks-compiler) (no compile server is used) and requires Node >= 20.12. If `--headers` is omitted, or the directory has no files, the bundled default headers are used.
 
 To listen to the debug stream, run:
 
@@ -67,11 +55,11 @@ npm install @xahau/hooks-cli
 Usage:
 
 ```javascript
-import { buildDir } from "@xahau/hooks-cli";
+import { compileC } from "@xahau/hooks-cli";
 
 const dirPath = "my/path/to/hooks/root/dir";
 const outDir = "my/build/wasm/directory";
-await buildDir(dirPath, outDir);
+await compileC(dirPath, outDir, { headers: "my/headers/dir" });
 ```
 
 ## Development / Deployment

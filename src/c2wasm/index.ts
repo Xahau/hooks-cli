@@ -1,56 +1,44 @@
-// Importing required modules
-import axios from "axios";
 import fs from "fs";
 import path from "path";
-import { decodeBinary } from "../2bytes/decodeBinary";
-import "dotenv/config";
 
-interface Task {
-  name: string;
-  console: string;
-  success: boolean;
-}
+const DEFAULT_HEADERS = path.join(
+  __dirname,
+  "..",
+  "init",
+  "c",
+  "contracts",
+  "include"
+);
 
-interface BuildResult {
-  success: boolean;
-  message: string;
-  output: string;
-  tasks: Task[];
-}
-
-const getCustomHeader = (headersPath: string | undefined): FileObject[] => {
-  let headerObjects: FileObject[] = [];
+// Keyed by basename, as the compile server was: `#include "foo.h"` finds headers/sub/foo.h.
+const getHeaders = (
+  headersPath: string | undefined
+): Record<string, string> => {
+  let files: FileObject[] = [];
   if (headersPath) {
     try {
-      headerObjects = readFiles(headersPath).filter(
-        (file) => file.type === "h"
-      );
+      files = readFiles(headersPath).filter((file) => file.type === "h");
     } catch (error: unknown) {
       console.error(`Error reading header files: ${error}`);
       process.exit(1);
     }
-    if (headerObjects.length === 0) {
+    if (files.length === 0) {
       console.log("No header files detected, using default headers...");
-      console.warn(
-        "In the feature version, default headers will not be provided. Please provide your own headers."
-      );
     }
   } else {
     console.log("No header path specified, using default headers...");
-    console.warn(
-      "In the feature version, default headers will not be provided. Please provide your own headers."
-    );
   }
-  return headerObjects;
+  if (files.length === 0) {
+    files = readFiles(DEFAULT_HEADERS).filter((file) => file.type === "h");
+  }
+  return Object.fromEntries(files.map((file) => [file.name, file.src]));
 };
 
 export async function buildCDir(
   dirPath: string,
   outDir: string,
-  headersPath: string | undefined,
-  isXRPL: boolean
+  headersPath: string | undefined
 ): Promise<void> {
-  // Reading all files in the directory tree
   let fileObjects: FileObject[];
   try {
     fileObjects = readFiles(dirPath).filter((file) => file.type === "c");
@@ -58,49 +46,27 @@ export async function buildCDir(
     console.error(`Error reading files: ${error}`);
     process.exit(1);
   }
-
-  const headerObjects = getCustomHeader(headersPath);
-
-  // Building wasm for each file object
-  await Promise.all(
-    fileObjects.map(async (fileObject) => {
-      try {
-        await buildWasm(fileObject, headerObjects, outDir, isXRPL);
-      } catch (error) {
-        console.error(`Error building wasm: ${error}`);
-        process.exit(1);
-      }
-    })
-  ).catch((error) => {
-    console.error(`Error building wasm: ${error}`);
-    process.exit(1);
-  });
+  const headers = getHeaders(headersPath);
+  // hooks-compiler shares one toolchain per process: build sequentially.
+  for (const fileObject of fileObjects) {
+    await buildWasm(fileObject, headers, outDir);
+  }
 }
 
 export async function buildFile(
   filePath: string,
   outDir: string,
-  headerPath: string | undefined,
-  isXRPL: boolean
+  headersPath: string | undefined
 ): Promise<void> {
-  const fileContent = fs.readFileSync(filePath, "utf-8");
-  if (!filePath.includes(".c")) {
+  if (path.extname(filePath) !== ".c") {
     throw Error("Invalid file type. must be .c file");
   }
-  const filename = filePath.split("/").pop();
-  if (!filename) throw Error("Invalid file name. must be a file name");
   const fileObject: FileObject = {
     type: "c",
-    name: filename,
-    src: fileContent,
+    name: path.basename(filePath),
+    src: fs.readFileSync(filePath, "utf-8"),
   };
-  const headerObjects = getCustomHeader(headerPath);
-  try {
-    await buildWasm(fileObject, headerObjects, outDir, isXRPL);
-  } catch (error) {
-    console.error(`Error building wasm: ${error}`);
-    process.exit(1);
-  }
+  await buildWasm(fileObject, getHeaders(headersPath), outDir);
 }
 
 // Function to read all files in a directory tree
@@ -120,7 +86,6 @@ export function readFiles(dirPath: string): FileObject[] {
       files.push({
         type: "c",
         name: fileName,
-        options: "-O3",
         src: fileContent,
       });
     } else if (path.extname(fileName) === ".h") {
@@ -135,92 +100,27 @@ export function readFiles(dirPath: string): FileObject[] {
   return files;
 }
 
-function parseBuildResult(result: BuildResult): string {
-  const errorConsole: string[] = [];
-
-  result.tasks.forEach((task) => {
-    if (!task.success) {
-      errorConsole.push(task.console);
-    }
-  });
-
-  if (errorConsole.length > 0) {
-    return errorConsole.join("\n");
-  }
-
-  return "";
-}
-
-async function saveFileOrError(
-  outDir: string,
-  filename: string,
-  result: BuildResult
-): Promise<void> {
-  if (!result.success) {
-    fs.writeFileSync(
-      path.join(outDir + "/" + filename + ".log"),
-      parseBuildResult(result)
-    );
-    console.error(parseBuildResult(result));
-    throw Error(result.message);
-  } else {
-    const binary = await decodeBinary(result.output);
-    fs.writeFileSync(
-      path.join(outDir + "/" + filename + ".wasm"),
-      Uint8Array.from(Buffer.from(binary))
-    );
-  }
-}
-
-export async function buildWasm(
+async function buildWasm(
   fileObject: FileObject,
-  headerObjects: FileObject[],
-  outDir: string,
-  isXRPL: boolean
+  headers: Record<string, string>,
+  outDir: string
 ) {
-  const filename = fileObject.name.split(".c")[0];
-  // Sending API call to endpoint
-  const body = JSON.stringify({
-    output: "wasm",
-    compress: true,
-    strip: true,
-    files: [fileObject],
-    headers: headerObjects,
-    xrpl: isXRPL,
-  });
-  const baseUrl = process.env.HOOKS_COMPILE_HOST;
-  if (!baseUrl) {
-    throw Error("Environment variable HOOKS_COMPILE_HOST is not set");
-  }
+  const name = path.basename(fileObject.name, ".c");
+  // Must stay a real dynamic import: hooks-compiler is ESM-only.
+  const { compile } = await import("hooks-compiler");
+  fs.mkdirSync(outDir, { recursive: true });
   try {
-    const response = await axios.post(`${baseUrl}/api/build`, body, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const r = await compile({
+      files: { ...headers, [fileObject.name]: fileObject.src },
+      entry: fileObject.name,
     });
-    // Saving response to file
-    const responseData = response.data;
-    const success = responseData.success === true;
-    const message = responseData.message;
-    const output = success ? responseData.output : "";
-    const tasks = responseData.tasks.map((task: Task) => {
-      return {
-        name: task.name,
-        console: task.console,
-        success: task.success === true,
-      } as Task;
-    });
-
-    // Creating result object
-    const result = {
-      success,
-      message,
-      output,
-      tasks,
-    } as BuildResult;
-    fs.mkdirSync(outDir, { recursive: true });
-    await saveFileOrError(outDir, filename, result);
+    const out = path.join(outDir, `${name}.wasm`);
+    fs.writeFileSync(out, r.wasm);
+    console.log(`Output: ${out} ${r.finalSize}b sha256 ${r.sha256}`);
   } catch (error: unknown) {
-    throw Error(`Error sending API call: ${error}`);
+    const message = error instanceof Error ? error.message : String(error);
+    fs.writeFileSync(path.join(outDir, `${name}.log`), message);
+    console.error(message);
+    process.exit(1);
   }
 }

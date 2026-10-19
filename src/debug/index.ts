@@ -1,5 +1,5 @@
 import ReconnectingWebSocket from "reconnecting-websocket";
-import WebSocket, { CloseEvent, MessageEvent } from "ws"; // Import the WebSocket implementation for Node.js
+import WebSocket, { type CloseEvent, type MessageEvent } from "ws"; // Import the WebSocket implementation for Node.js
 
 export interface ISelect<T = string> {
   label: string;

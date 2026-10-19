@@ -1,19 +1,19 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import {
+  after,
+  afterEach,
+  before,
+  beforeEach,
   describe,
   it,
-  before,
-  after,
-  beforeEach,
-  afterEach,
   mock,
 } from "node:test";
-import assert from "node:assert/strict";
-import { initCommand } from "../../src/commands";
-import { execFileSync } from "child_process";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 import axios from "axios";
+import { initCommand } from "../../src/commands";
 
 // These tests exercise the actual `<pm> install` / `<pm> run build` flow of a
 // freshly generated project for each supported package manager (as an end
@@ -34,7 +34,7 @@ describe("Init project install/build", () => {
     // The generated project's `build` script shells out to the `hooks-cli`
     // binary, which requires this repo to already be built.
     if (!fs.existsSync(cliEntry)) {
-      execFileSync("yarn", ["run", "build"], {
+      execFileSync("pnpm", ["run", "build"], {
         cwd: repoRoot,
         stdio: "inherit",
       });
@@ -77,45 +77,43 @@ describe("Init project install/build", () => {
         fs.rmSync(tmpBase, { recursive: true, force: true });
       });
 
-      it(
-        "installs and builds successfully",
-        { timeout: 5 * 60 * 1000 },
-        async () => {
-          // initCommand resolves the target directory from process.cwd(), so
-          // point it at tmpBase just for this call.
-          const originalCwd = process.cwd();
-          process.chdir(tmpBase);
-          try {
-            await initCommand(type, folderName, {
-              packageManager,
-            });
-          } finally {
-            process.chdir(originalCwd);
-          }
-          assert.ok(fs.existsSync(projectPath));
-
-          try {
-            runInProject(projectPath, packageManager, ["install"]);
-            // The install pulls the published @xahau/hooks-cli; point the
-            // project's `hooks-cli` bin at this repo's build instead.
-            fs.writeFileSync(
-              path.join(projectPath, "node_modules", ".bin", "hooks-cli"),
-              `#!/bin/sh\nexec node "${cliBin}" "$@"\n`,
-              { mode: 0o755 }
-            );
-            runInProject(projectPath, packageManager, ["run", "build"]);
-          } catch (error: unknown) {
-            const err = error as { stdout?: Buffer; stderr?: Buffer };
-            throw new Error(
-              `${packageManager} install/build failed for ${type} project:\n${err.stdout?.toString()}\n${err.stderr?.toString()}`
-            );
-          }
-
-          const buildDir = path.join(projectPath, "build");
-          assert.ok(fs.existsSync(buildDir));
-          assert.ok(fs.readdirSync(buildDir).length > 0);
+      it("installs and builds successfully", {
+        timeout: 5 * 60 * 1000,
+      }, async () => {
+        // initCommand resolves the target directory from process.cwd(), so
+        // point it at tmpBase just for this call.
+        const originalCwd = process.cwd();
+        process.chdir(tmpBase);
+        try {
+          await initCommand(type, folderName, {
+            packageManager,
+          });
+        } finally {
+          process.chdir(originalCwd);
         }
-      );
+        assert.ok(fs.existsSync(projectPath));
+
+        try {
+          runInProject(projectPath, packageManager, ["install"]);
+          // The install pulls the published @xahau/hooks-cli; point the
+          // project's `hooks-cli` bin at this repo's build instead.
+          fs.writeFileSync(
+            path.join(projectPath, "node_modules", ".bin", "hooks-cli"),
+            `#!/bin/sh\nexec node "${cliBin}" "$@"\n`,
+            { mode: 0o755 }
+          );
+          runInProject(projectPath, packageManager, ["run", "build"]);
+        } catch (error: unknown) {
+          const err = error as { stdout?: Buffer; stderr?: Buffer };
+          throw new Error(
+            `${packageManager} install/build failed for ${type} project:\n${err.stdout?.toString()}\n${err.stderr?.toString()}`
+          );
+        }
+
+        const buildDir = path.join(projectPath, "build");
+        assert.ok(fs.existsSync(buildDir));
+        assert.ok(fs.readdirSync(buildDir).length > 0);
+      });
     });
   }
 });

@@ -36,7 +36,7 @@ c2wasm-cli contracts build --headers headers
 
 This will compile the `contracts` directory and output the `.wasm` files into the `build` directory.
 
-Compilation runs locally via [hooks-compiler](https://www.npmjs.com/package/hooks-compiler) (no compile server is used) and requires Node >= 20.12. If `--headers` is omitted, or the directory has no files, the bundled default headers are used.
+Compilation runs locally via [hooks-compiler](https://www.npmjs.com/package/hooks-compiler) (no compile server is used) and requires Node >= 20.12. If `--headers` is omitted, or the directory has no files, the bundled default headers are used. The bundled headers (also copied into `contracts/include` by `init c`) are `hook/*.h` from the [xahaud](https://github.com/Xahau/xahaud) `release` branch; `yarn headers:update` refreshes them and CI runs `yarn headers:check` to flag drift.
 
 To listen to the debug stream, run:
 

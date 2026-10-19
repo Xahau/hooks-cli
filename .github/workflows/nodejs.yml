@@ -60,6 +60,19 @@ jobs:
 
       - run: yarn run lint
 
+  # The C template bundles hook/*.h from the xahaud release branch; fail if they drift.
+  headers-up-to-date:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+      - run: node scripts/update-headers.mjs --check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   integration:
     runs-on: ubuntu-latest
     timeout-minutes: 10

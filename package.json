@@ -24,7 +24,9 @@
     "build": "tsc && cp -r src/init dist/npm/src",
     "test:integration": "tsx --test test/integration/*.test.ts",
     "lint": "eslint ./src/**/* --ext .ts",
-    "format": "npx prettier --write ./src"
+    "format": "npx prettier --write ./src",
+    "headers:update": "node scripts/update-headers.mjs",
+    "headers:check": "node scripts/update-headers.mjs --check"
   },
   "author": {
     "name": "Denis Angell",

@@ -58,14 +58,8 @@ describe("Init Tests", () => {
     const bundled = path.join(templatePath, "contracts", "include");
     const includePath = path.join(projectPath, "contracts", "include");
     const names = fs.readdirSync(includePath).sort();
-    assert.deepEqual(names, [
-      "error.h",
-      "extern.h",
-      "hookapi.h",
-      "macro.h",
-      "sfcodes.h",
-      "tts.h",
-    ]);
+    assert.deepEqual(names, fs.readdirSync(bundled).sort());
+    assert.ok(names.includes("hookapi.h"));
     for (const name of names) {
       assert.equal(
         fs.readFileSync(path.join(includePath, name), "utf-8"),

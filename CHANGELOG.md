@@ -1,3 +1,13 @@
+## [Unreleased]
+
+### Breaking:
+- JS Hooks support (`compile-js`, `js2qjsc-cli`, `init js`) removed.
+- C Hooks are now compiled locally with `hooks-compiler@0.2.0`. `HOOKS_COMPILE_HOST` and the `--xrpl` flag are removed.
+- Node >= 20.12 is required.
+
+### Changed:
+- `init c` ships the header files in `contracts/include`, taken from the xahaud `release` branch (`yarn headers:update` / `yarn headers:check`).
+
 ## [2.0.0] - 2025-01-22
 
 ### Updated:

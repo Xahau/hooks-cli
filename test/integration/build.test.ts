@@ -1,159 +1,57 @@
 import {
-  compileJSCommand,
-  compileCCommand,
-  // debugCommand,
-  // newCredsCommand,
-} from "../../src/commands";
+  describe,
+  it,
+  before,
+  after,
+  beforeEach,
+  afterEach,
+  mock,
+} from "node:test";
+import assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
+import { compileCCommand } from "../../src/commands";
 
 describe("Build Tests", () => {
-  const originalConsoleLog = console.log;
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
-  const originalProcessExit = process.exit;
+  const inPathC = path.join(process.cwd(), "contracts-c", "base.c");
+  const outDir = path.join(process.cwd(), "build");
+  const clean = () => fs.rmSync(outDir, { recursive: true, force: true });
+  let exit: ReturnType<typeof mock.method>;
+  let error: ReturnType<typeof mock.method>;
 
-  beforeAll(() => {
-    // Mock console.log to suppress log messages during tests
-    console.log = jest.fn();
-    // Mock console.error to suppress error messages during tests
-    console.error = jest.fn();
-    // Mock console.warn to suppress warning messages during tests
-    console.warn = jest.fn();
-    // replace process.exit with a function that throws an error
-    process.exit = jest.fn(() => {
+  before(() => {
+    mock.method(console, "log", () => undefined);
+    error = mock.method(console, "error", () => undefined);
+    exit = mock.method(process, "exit", () => {
       throw Error("Process exit called");
     });
   });
+  after(() => mock.restoreAll());
+  beforeEach(() => {
+    clean();
+    exit.mock.resetCalls();
+    error.mock.resetCalls();
+  });
+  afterEach(clean);
 
-  afterAll(() => {
-    // Restore original console.log, console.error, console.warn and process.exit
-    console.log = originalConsoleLog;
-    console.error = originalConsoleError;
-    console.warn = originalConsoleWarn;
-    process.exit = originalProcessExit;
+  it("should compile a C file to Wasm", async () => {
+    await compileCCommand(inPathC, outDir);
+    assert.equal(fs.statSync(path.join(outDir, "base.wasm")).size, 197);
   });
 
-  describe("compileJSCommand", () => {
-    const inPathTS = path.join(process.cwd(), "contracts-js", "base.js");
-    const outDir = path.join(process.cwd(), "build");
-
-    beforeEach(() => {
-      // Ensure output directory does not exist
-      if (fs.existsSync(outDir)) {
-        fs.rmSync(outDir, { recursive: true, force: true });
-      }
-    });
-
-    afterEach(() => {
-      // Clean up
-      if (fs.existsSync(outDir)) {
-        fs.rmSync(outDir, { recursive: true, force: true });
-      }
-    });
-
-    it("should compile a JS file to Wasm", async () => {
-      await expect(compileJSCommand(inPathTS, outDir)).resolves.not.toThrow();
-      expect(fs.existsSync(path.join(outDir, "base.bc"))).toBe(true);
-    });
-
-    it("should handle missing input path error", async () => {
-      await expect(compileJSCommand("", outDir)).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith("Input path is required.");
-    });
-
-    it("should handle missing output directory error", async () => {
-      await expect(compileJSCommand(inPathTS, "")).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith(
-        "Output directory path is required."
-      );
-    });
-
-    it("should handle invalid export ts code error", async () => {
-      const tmpFilename = path.join(__dirname, "invalid.ts");
-      fs.writeFileSync(tmpFilename, `const Hook = ()=> { return accept('') }`);
-      await expect(compileJSCommand(tmpFilename, outDir)).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith("No Hook export found");
-      fs.unlinkSync(tmpFilename);
-    });
-
-    it("should handle invalid import js code error", async () => {
-      const tmpFilename = path.join(__dirname, "invalid.js");
-      fs.writeFileSync(
-        tmpFilename,
-        `
-          import { invalid } from 'invalid';
-          const Hook = ()=> {
-            return accept('')
-          }
-          `
-      );
-      await expect(compileJSCommand(tmpFilename, outDir)).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith(
-        "import is not allowed in js code"
-      );
-      fs.unlinkSync(tmpFilename);
-    });
-
-    it.each([
-      `export const Hook = ()=> { return accept('') }`,
-      `
-      const Hook = ()=> {
-        return accept('')
-      }
-      export { Hook }
-      `,
-    ])("should handle invalid export js code error", async (code) => {
-      const tmpFilename = path.join(__dirname, "invalid.js");
-      fs.writeFileSync(tmpFilename, code);
-      await expect(compileJSCommand(tmpFilename, outDir)).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith(
-        "export is not allowed in js code"
-      );
-      fs.unlinkSync(tmpFilename);
-    });
+  it("should handle missing input path error", async () => {
+    await assert.rejects(compileCCommand("", outDir));
+    assert.deepEqual(exit.mock.calls[0].arguments, [1]);
+    assert.deepEqual(error.mock.calls[0].arguments, [
+      "Input path is required.",
+    ]);
   });
 
-  describe("compileCCommand", () => {
-    const inPathC = path.join(process.cwd(), "contracts-c", "base.c");
-    const outDir = path.join(process.cwd(), "build");
-
-    beforeEach(() => {
-      // Ensure output directory does not exist
-      if (fs.existsSync(outDir)) {
-        fs.rmSync(outDir, { recursive: true, force: true });
-      }
-    });
-
-    afterEach(() => {
-      // Clean up
-      if (fs.existsSync(outDir)) {
-        fs.rmSync(outDir, { recursive: true, force: true });
-      }
-    });
-
-    it("should compile a C file to Wasm", async () => {
-      await expect(compileCCommand(inPathC, outDir)).resolves.not.toThrow();
-      expect(fs.existsSync(path.join(outDir, "base.wasm"))).toBe(true);
-    });
-
-    it("should handle missing input path error", async () => {
-      await expect(compileCCommand("", outDir)).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith("Input path is required.");
-    });
-
-    it("should handle missing output directory error", async () => {
-      await expect(compileCCommand(inPathC, "")).rejects.toThrow();
-      expect(process.exit).toHaveBeenCalledWith(1);
-      expect(console.error).toHaveBeenCalledWith(
-        "Output directory path is required."
-      );
-    });
+  it("should handle missing output directory error", async () => {
+    await assert.rejects(compileCCommand(inPathC, ""));
+    assert.deepEqual(exit.mock.calls[0].arguments, [1]);
+    assert.deepEqual(error.mock.calls[0].arguments, [
+      "Output directory path is required.",
+    ]);
   });
 });

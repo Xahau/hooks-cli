@@ -1,6 +1,5 @@
 interface FileObject {
-  type: "c" | "h" | "js" | "ts";
+  type: "c" | "h";
   name: string;
-  options?: string;
   src: string;
 }

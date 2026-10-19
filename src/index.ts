@@ -1,3 +1,3 @@
-import { compileCCommand, compileJSCommand } from "./commands";
+import { compileCCommand } from "./commands";
 
-export { compileCCommand as compileC, compileJSCommand as compileJS };
+export { compileCCommand as compileC };

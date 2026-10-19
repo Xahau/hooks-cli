@@ -1,7 +1,5 @@
-import { buildFile as buildJSFile } from "./js2qjsc";
 import { buildFile as buildCFile, buildCDir } from "./c2wasm";
-import { mkdir, statSync, writeFileSync } from "fs";
-import * as esbuild from "esbuild";
+import { statSync, writeFileSync } from "fs";
 import * as fs from "fs";
 import * as path from "path";
 import { addListeners, ISelect } from "./debug";
@@ -19,10 +17,7 @@ const applyPackageManager = (
   const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
   if (pkg.scripts) {
     for (const name of Object.keys(pkg.scripts)) {
-      pkg.scripts[name] = pkg.scripts[name].replace(
-        /\bnpm\b/g,
-        packageManager
-      );
+      pkg.scripts[name] = pkg.scripts[name].replace(/\bnpm\b/g, packageManager);
     }
   }
   fs.writeFileSync(
@@ -46,87 +41,23 @@ const copyFiles = (source: string, destination: string) => {
   });
 };
 
-const downloadCHeaderFiles = async (
-  compileHost: string,
-  projectDir: string
-): Promise<void> => {
-  const response = await axios.get(
-    `${compileHost.replace(/\/+$/, "")}/api/header-files`
-  );
-  const headerFiles = response.data;
-  if (!headerFiles || typeof headerFiles !== "object") {
-    throw Error("Invalid header files response from the compile server");
-  }
-
-  const headerNames = Object.keys(headerFiles);
-  if (headerNames.length === 0) {
-    throw Error("No header files returned from the compile server");
-  }
-
-  const files = headerNames.map((name) => {
-    const content = headerFiles[name];
-    if (typeof content !== "string" || content.length === 0) {
-      throw Error(`Missing or invalid header file: ${name}.h`);
-    }
-    return { filename: `${name}.h`, content };
-  });
-
-  const includeDir = path.join(projectDir, "contracts", "include");
-  fs.mkdirSync(includeDir, { recursive: true });
-  files.forEach(({ filename, content }) => {
-    fs.writeFileSync(path.join(includeDir, filename), content, "utf-8");
-  });
-};
-
-const clean = (filePath: string, outputPath?: string): string => {
-  const tsCode = fs.readFileSync(filePath, "utf-8");
-  const importPattern = /^\s*import\s+.*?;\s*$/gm;
-  const exportPattern = /^\s*export\s*\{[^}]*\};?\s*$/gm;
-  const commentPattern = /^\s*\/\/.*$/gm;
-  let cleanedCode = tsCode.replace(importPattern, "");
-  cleanedCode = cleanedCode.replace(exportPattern, "");
-  cleanedCode = cleanedCode.replace(commentPattern, "");
-  cleanedCode = cleanedCode.trim();
-  if (cleanedCode === "") {
-    console.error("No Hook export found");
-    process.exit(1);
-  }
-  if (outputPath) {
-    fs.writeFileSync(outputPath, cleanedCode, "utf-8");
-  }
-  return cleanedCode;
-};
-
-const validateJSCode = (filePath: string) => {
-  // In JS code, we don't bundle the code.
-  // Import or export can't be used in JSHooks, so we check the code.
-  const code = fs.readFileSync(filePath, "utf-8");
-  const importPattern = /^\s*import\s+.*?;\s*$/gm;
-  const exportPattern1 = /^\s*export\s*\{[^}]*\};?\s*$/gm; // export { ... }
-  const exportPattern2 = /^\s*export const\s.*?\{[^}]*\};?\s*$/gm; // export const abc(...){...} or export const abc = (...)=>{...}
-  if (importPattern.test(code)) {
-    console.error("import is not allowed in js code");
-    process.exit(1);
-  }
-  if (exportPattern1.test(code) || exportPattern2.test(code)) {
-    console.error("export is not allowed in js code");
-    process.exit(1);
-  }
-};
-
 export const initCommand = async (
-  type: "c" | "js",
+  type: "c",
   folderName: string,
   options?: { packageManager?: string }
 ) => {
-  const packageManager = (options?.packageManager ??
-    "npm") as PackageManager;
+  const packageManager = (options?.packageManager ?? "npm") as PackageManager;
   if (!PACKAGE_MANAGERS.includes(packageManager)) {
     console.error(
       `Invalid package manager "${packageManager}". Use one of: ${PACKAGE_MANAGERS.join(
         ", "
       )}.`
     );
+    process.exit(1);
+  }
+
+  if (type !== "c") {
+    console.error('Invalid type. Use "c" for CHooks.');
     process.exit(1);
   }
 
@@ -140,117 +71,44 @@ export const initCommand = async (
 
   fs.mkdirSync(newProjectDir, { recursive: true });
 
-  if (type === "c" || type === "js") {
-    copyFiles(templateDir, newProjectDir);
-    applyPackageManager(newProjectDir, packageManager);
-    console.log(
-      `Created ${
-        type === "c" ? "CHooks" : "JSHooks"
-      } project in ${newProjectDir}`
-    );
-    const projectEnv = dotenv.config({
-      path: path.join(newProjectDir, ".env"),
-    });
-    if (!projectEnv.parsed) {
-      console.log("No .env file found in the project template.");
-      process.exit(1);
-    }
-    const env = projectEnv.parsed;
-    if (type === "c") {
-      const compileHost = env.HOOKS_COMPILE_HOST;
-      if (!compileHost) {
-        throw Error("HOOKS_COMPILE_HOST is not set in the project template");
-      }
-      try {
-        await downloadCHeaderFiles(compileHost, newProjectDir);
-        console.log("Header files saved to contracts/include.");
-      } catch (error) {
-        console.error("Error downloading header files:", error);
-        throw error;
-      }
-    }
-    try {
-      const aliceResponse = await axios.post(
-        `https://${env.XRPLD_WSS.replace("wss://", "")}/newcreds`
-      );
-      if (aliceResponse.data.error) {
-        console.error(aliceResponse.data.error);
-        process.exit(1);
-      }
-      if (aliceResponse.data.code === "tesSUCCESS") {
-        const aliceSecret = aliceResponse.data.secret;
-
-        const envFilePath = path.join(newProjectDir, ".env");
-        const envObject = {
-          ...env,
-          ALICE_SEED: aliceSecret,
-        };
-        const envContent = Object.entries(envObject)
-          .map(([key, value]) => `${key}=${value}`)
-          .join("\n");
-        writeFileSync(envFilePath, envContent, { encoding: "utf-8" });
-
-        console.log("Secrets saved to .env file.");
-      } else {
-        console.error("Failed to retrieve secrets from the server.");
-      }
-    } catch (error) {
-      console.error("Error making POST requests:", error);
-    }
-  } else {
-    console.error('Invalid type. Use "c" for CHooks or "js" for JSHooks.');
+  copyFiles(templateDir, newProjectDir);
+  applyPackageManager(newProjectDir, packageManager);
+  console.log(`Created CHooks project in ${newProjectDir}`);
+  const projectEnv = dotenv.config({
+    path: path.join(newProjectDir, ".env"),
+  });
+  if (!projectEnv.parsed) {
+    console.log("No .env file found in the project template.");
     process.exit(1);
   }
-};
-
-export const compileJSCommand = async (inPath: string, outDir: string) => {
-  if (!inPath || inPath === "") {
-    console.error("Input path is required.");
-    process.exit(1);
-  }
-
-  if (!outDir || outDir === "") {
-    console.error("Output directory path is required.");
-    process.exit(1);
-  }
-
+  const env = projectEnv.parsed;
   try {
-    const outStat = statSync(outDir);
-    if (!outStat.isDirectory()) {
-      console.error("Output path must be a directory.");
+    const aliceResponse = await axios.post(
+      `https://${env.XRPLD_WSS.replace("wss://", "")}/newcreds`
+    );
+    if (aliceResponse.data.error) {
+      console.error(aliceResponse.data.error);
       process.exit(1);
     }
-  } catch (error: unknown) {
-    mkdir(outDir, { recursive: true }, (err) => {
-      if (err) {
-        console.error(`Failed to create directory: ${outDir}`);
-        process.exit(1);
-      }
-      console.log(`Created directory: ${outDir}`);
-    });
-  }
+    if (aliceResponse.data.code === "tesSUCCESS") {
+      const aliceSecret = aliceResponse.data.secret;
 
-  if (path.extname(inPath) === ".ts") {
-    const file = inPath.split("/").pop();
-    const filename = file?.split(".ts")[0];
-    const newPath = inPath.replace(file as string, `dist/${filename}.js`);
-    await esbuild.build({
-      entryPoints: [inPath],
-      outfile: newPath,
-      bundle: true,
-      format: "esm",
-    });
-    clean(newPath, newPath);
-    await buildJSFile(newPath, outDir);
-    return;
-  }
+      const envFilePath = path.join(newProjectDir, ".env");
+      const envObject = {
+        ...env,
+        ALICE_SEED: aliceSecret,
+      };
+      const envContent = Object.entries(envObject)
+        .map(([key, value]) => `${key}=${value}`)
+        .join("\n");
+      writeFileSync(envFilePath, envContent, { encoding: "utf-8" });
 
-  const dirStat = statSync(inPath);
-  if (dirStat.isDirectory()) {
-    throw Error("JS2Wasm Can ONLY build files");
-  } else {
-    validateJSCode(inPath);
-    await buildJSFile(inPath, outDir);
+      console.log("Secrets saved to .env file.");
+    } else {
+      console.error("Failed to retrieve secrets from the server.");
+    }
+  } catch (error) {
+    console.error("Error making POST requests:", error);
   }
 };
 
@@ -286,13 +144,7 @@ export const compileCCommand = async (
       process.exit(1);
     }
   } catch (error: unknown) {
-    mkdir(outDir, { recursive: true }, (err) => {
-      if (err) {
-        console.error(`Failed to create directory: ${outDir}`);
-        process.exit(1);
-      }
-      console.log(`Created directory: ${outDir}`);
-    });
+    fs.mkdirSync(outDir, { recursive: true });
   }
 
   const headersPath = args?.headers;
@@ -308,13 +160,11 @@ export const compileCCommand = async (
     }
   }
 
-  const isXRPL = args?.xrpl || false;
-
   const dirStat = fs.statSync(inPath);
   if (dirStat.isDirectory()) {
-    await buildCDir(inPath, outDir, headersPath, isXRPL);
+    await buildCDir(inPath, outDir, headersPath);
   } else {
-    await buildCFile(inPath, outDir, headersPath, isXRPL);
+    await buildCFile(inPath, outDir, headersPath);
   }
 };
 

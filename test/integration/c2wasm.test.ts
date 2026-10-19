@@ -1,23 +1,32 @@
-import axios from "axios";
+import { describe, it, beforeEach, afterEach } from "node:test";
+import assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
 import { buildCDir } from "../../src/c2wasm";
-import { decodeBinary } from "../../src/2bytes/decodeBinary";
-
-jest.mock("axios");
-jest.mock("../../src/2bytes/decodeBinary");
 
 describe("C directory builds", () => {
+  const bundledInclude = path.join(
+    __dirname,
+    "..",
+    "..",
+    "src",
+    "init",
+    "c",
+    "contracts",
+    "include"
+  );
   const projectDir = path.join(process.cwd(), "test-c-build-project");
   const contractsDir = path.join(projectDir, "contracts");
   const includeDir = path.join(contractsDir, "include");
   const outDir = path.join(projectDir, "build");
 
   beforeEach(() => {
-    jest.clearAllMocks();
     fs.mkdirSync(includeDir, { recursive: true });
-    fs.writeFileSync(path.join(contractsDir, "base.c"), "int64_t hook() {}\n");
-    fs.writeFileSync(path.join(includeDir, "macro.h"), "#define TEST 1\n");
+    fs.cpSync(bundledInclude, includeDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(contractsDir, "base.c"),
+      '#include "hookapi.h"\nint64_t hook(uint32_t r){ _g(1,1); return accept(SBUF("ok"), 0); }\n'
+    );
   });
 
   afterEach(() => {
@@ -25,25 +34,17 @@ describe("C directory builds", () => {
   });
 
   it("does not compile headers found below the source directory", async () => {
-    (decodeBinary as jest.Mock).mockResolvedValue(new Uint8Array([0]));
-    (axios.post as jest.Mock).mockResolvedValue({
-      data: {
-        success: true,
-        message: "",
-        output: "binary",
-        tasks: [],
-      },
-    });
+    await buildCDir(contractsDir, outDir, includeDir);
+    assert.deepEqual(fs.readdirSync(outDir), ["base.wasm"]);
+  });
 
-    await buildCDir(contractsDir, outDir, includeDir, false);
-
-    expect(axios.post).toHaveBeenCalledTimes(1);
-    const body = JSON.parse((axios.post as jest.Mock).mock.calls[0][1]);
-    expect(body.files).toEqual([
-      expect.objectContaining({ name: "base.c", type: "c" }),
-    ]);
-    expect(body.headers).toEqual([
-      expect.objectContaining({ name: "macro.h", type: "h" }),
-    ]);
+  it("finds headers in subdirectories by basename", async () => {
+    fs.mkdirSync(path.join(includeDir, "sub"));
+    fs.renameSync(
+      path.join(includeDir, "macro.h"),
+      path.join(includeDir, "sub", "macro.h")
+    );
+    await buildCDir(contractsDir, outDir, includeDir);
+    assert.deepEqual(fs.readdirSync(outDir), ["base.wasm"]);
   });
 });

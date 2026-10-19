@@ -77,45 +77,43 @@ describe("Init project install/build", () => {
         fs.rmSync(tmpBase, { recursive: true, force: true });
       });
 
-      it(
-        "installs and builds successfully",
-        { timeout: 5 * 60 * 1000 },
-        async () => {
-          // initCommand resolves the target directory from process.cwd(), so
-          // point it at tmpBase just for this call.
-          const originalCwd = process.cwd();
-          process.chdir(tmpBase);
-          try {
-            await initCommand(type, folderName, {
-              packageManager,
-            });
-          } finally {
-            process.chdir(originalCwd);
-          }
-          assert.ok(fs.existsSync(projectPath));
-
-          try {
-            runInProject(projectPath, packageManager, ["install"]);
-            // The install pulls the published @xahau/hooks-cli; point the
-            // project's `hooks-cli` bin at this repo's build instead.
-            fs.writeFileSync(
-              path.join(projectPath, "node_modules", ".bin", "hooks-cli"),
-              `#!/bin/sh\nexec node "${cliBin}" "$@"\n`,
-              { mode: 0o755 }
-            );
-            runInProject(projectPath, packageManager, ["run", "build"]);
-          } catch (error: unknown) {
-            const err = error as { stdout?: Buffer; stderr?: Buffer };
-            throw new Error(
-              `${packageManager} install/build failed for ${type} project:\n${err.stdout?.toString()}\n${err.stderr?.toString()}`
-            );
-          }
-
-          const buildDir = path.join(projectPath, "build");
-          assert.ok(fs.existsSync(buildDir));
-          assert.ok(fs.readdirSync(buildDir).length > 0);
+      it("installs and builds successfully", {
+        timeout: 5 * 60 * 1000,
+      }, async () => {
+        // initCommand resolves the target directory from process.cwd(), so
+        // point it at tmpBase just for this call.
+        const originalCwd = process.cwd();
+        process.chdir(tmpBase);
+        try {
+          await initCommand(type, folderName, {
+            packageManager,
+          });
+        } finally {
+          process.chdir(originalCwd);
         }
-      );
+        assert.ok(fs.existsSync(projectPath));
+
+        try {
+          runInProject(projectPath, packageManager, ["install"]);
+          // The install pulls the published @xahau/hooks-cli; point the
+          // project's `hooks-cli` bin at this repo's build instead.
+          fs.writeFileSync(
+            path.join(projectPath, "node_modules", ".bin", "hooks-cli"),
+            `#!/bin/sh\nexec node "${cliBin}" "$@"\n`,
+            { mode: 0o755 }
+          );
+          runInProject(projectPath, packageManager, ["run", "build"]);
+        } catch (error: unknown) {
+          const err = error as { stdout?: Buffer; stderr?: Buffer };
+          throw new Error(
+            `${packageManager} install/build failed for ${type} project:\n${err.stdout?.toString()}\n${err.stderr?.toString()}`
+          );
+        }
+
+        const buildDir = path.join(projectPath, "build");
+        assert.ok(fs.existsSync(buildDir));
+        assert.ok(fs.readdirSync(buildDir).length > 0);
+      });
     });
   }
 });

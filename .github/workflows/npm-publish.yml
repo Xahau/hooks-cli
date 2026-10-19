@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag to publish (e.g. v1.2.3 or 1.2.3). Must match package.json "version".'
+        description: 'Version tag to publish (e.g. v1.2.3 or 1.2.3). Must match package.json "version". Pre-release versions (e.g. 3.0.0-alpha.1) are published under the "next" dist-tag and marked as a GitHub pre-release.'
         required: true
         type: string
       dry_run:
@@ -49,6 +49,16 @@ jobs:
           echo "Version check passed: ${PKG_VERSION}"
           echo "RELEASE_TAG=v${PKG_VERSION}" >> "$GITHUB_ENV"
 
+          # Pre-release versions (e.g. 3.0.0-alpha.1) go to the "next" dist-tag
+          # so "npm install @xahau/hooks-cli" keeps resolving to the stable release.
+          if [[ "$PKG_VERSION" == *-* ]]; then
+            echo "NPM_TAG=next" >> "$GITHUB_ENV"
+            echo "GH_PRERELEASE=true" >> "$GITHUB_ENV"
+          else
+            echo "NPM_TAG=latest" >> "$GITHUB_ENV"
+            echo "GH_PRERELEASE=false" >> "$GITHUB_ENV"
+          fi
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
@@ -57,18 +67,19 @@ jobs:
 
       - name: Publish to npm (dry run)
         if: ${{ inputs.dry_run }}
-        run: npm publish --access public --dry-run
+        run: npm publish --access public --tag "$NPM_TAG" --dry-run
 
       - name: Publish to npm
         if: ${{ !inputs.dry_run }}
-        run: npm publish --access public
+        run: npm publish --access public --tag "$NPM_TAG"
 
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${RELEASE_TAG}" \
-            --title "${RELEASE_TAG}" \
-            --generate-notes \
-            --target "${{ github.sha }}"
+          ARGS=(--title "${RELEASE_TAG}" --generate-notes --target "${{ github.sha }}")
+          if [ "$GH_PRERELEASE" = true ]; then
+            ARGS+=(--prerelease)
+          fi
+          gh release create "${RELEASE_TAG}" "${ARGS[@]}"

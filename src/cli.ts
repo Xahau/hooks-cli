@@ -2,7 +2,7 @@
 
 import "dotenv/config";
 import { Command } from "commander";
-import { initCommand, compileCCommand, debugCommand } from "./commands";
+import { compileCCommand, debugCommand, initCommand } from "./commands";
 
 type Target = "c";
 

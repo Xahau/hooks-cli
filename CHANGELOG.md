@@ -6,7 +6,8 @@
 - Node >= 20.12 is required.
 
 ### Changed:
-- `init c` ships the header files in `contracts/include`, taken from the xahaud `release` branch (`yarn headers:update` / `yarn headers:check`).
+- Repo tooling: yarn -> pnpm, eslint/prettier -> biome.
+- `init c` ships the header files in `contracts/include`, taken from the xahaud `release` branch (`pnpm headers:update` / `pnpm headers:check`).
 
 ## [2.0.0] - 2025-01-22
 

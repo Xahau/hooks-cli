@@ -26,11 +26,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '22.x'
-          cache: yarn
+          cache: pnpm
 
       - name: Update npm for OIDC trusted publishing
         run: npm install --global npm@latest
@@ -60,10 +63,10 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: yarn run build
+        run: pnpm run build
 
       - name: Publish to npm (dry run)
         if: ${{ inputs.dry_run }}

@@ -1,7 +1,7 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { afterEach, beforeEach, describe, it } from "node:test";
 import { buildCDir } from "../../src/c2wasm";
 
 describe("C directory builds", () => {

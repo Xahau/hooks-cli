@@ -1,10 +1,10 @@
-import { buildFile as buildCFile, buildCDir } from "./c2wasm";
-import { statSync, writeFileSync } from "fs";
-import * as fs from "fs";
-import * as path from "path";
-import { addListeners, ISelect } from "./debug";
+import * as fs from "node:fs";
+import { statSync, writeFileSync } from "node:fs";
+import * as path from "node:path";
 import axios from "axios";
 import dotenv from "dotenv";
+import { buildCDir, buildFile as buildCFile } from "./c2wasm";
+import { addListeners, type ISelect } from "./debug";
 
 export type PackageManager = "npm" | "yarn" | "pnpm";
 const PACKAGE_MANAGERS: PackageManager[] = ["npm", "yarn", "pnpm"];
@@ -143,7 +143,7 @@ export const compileCCommand = async (
       console.error("Output path must be a directory.");
       process.exit(1);
     }
-  } catch (error: unknown) {
+  } catch {
     fs.mkdirSync(outDir, { recursive: true });
   }
 

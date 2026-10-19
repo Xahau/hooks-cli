@@ -47,7 +47,7 @@ if (stale.length === 0) {
   console.error(
     `Headers differ from ${REPO}@${BRANCH}: ${stale.join(
       ", "
-    )}\nRun: yarn headers:update`
+    )}\nRun: pnpm headers:update`
   );
   process.exit(1);
 } else {

@@ -1,19 +1,19 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import {
+  after,
+  afterEach,
+  before,
+  beforeEach,
   describe,
   it,
-  before,
-  after,
-  beforeEach,
-  afterEach,
   mock,
 } from "node:test";
-import assert from "node:assert/strict";
-import { initCommand } from "../../src/commands";
-import { execFileSync } from "child_process";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 import axios from "axios";
+import { initCommand } from "../../src/commands";
 
 // These tests exercise the actual `<pm> install` / `<pm> run build` flow of a
 // freshly generated project for each supported package manager (as an end
@@ -34,7 +34,7 @@ describe("Init project install/build", () => {
     // The generated project's `build` script shells out to the `hooks-cli`
     // binary, which requires this repo to already be built.
     if (!fs.existsSync(cliEntry)) {
-      execFileSync("yarn", ["run", "build"], {
+      execFileSync("pnpm", ["run", "build"], {
         cwd: repoRoot,
         stdio: "inherit",
       });

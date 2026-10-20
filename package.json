@@ -1,6 +1,6 @@
 {
   "name": "@xahau/hooks-cli",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0",
   "description": "Hooks CLI is a tool for compiling hooks to Xahau's smart contract format",
   "keywords": [
     "xahau",

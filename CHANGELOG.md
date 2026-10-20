@@ -1,4 +1,4 @@
-## [Unreleased]
+## [3.0.0] - 2026-10-20
 
 ### Breaking:
 - JS Hooks support (`compile-js`, `js2qjsc-cli`, `init js`) removed.

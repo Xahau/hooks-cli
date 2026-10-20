@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
-    "@xahau/hooks-cli": "^2.1.0",
+    "@xahau/hooks-cli": "^3.0.0",
     "tsx": "^4.19.2",
     "typescript": "^4.9.5"
   }

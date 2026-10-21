@@ -9,33 +9,32 @@
 - Repo tooling: yarn -> pnpm, eslint/prettier -> biome.
 - `init c` ships the header files in `contracts/include`, taken from the xahaud `release` branch (`pnpm headers:update` / `pnpm headers:check`).
 
-## [2.0.0] - 2025-01-22
-
-### Updated:
-- Renamed `hooks-toolkit-cli` to `hooks-cli`
-
-## [2.0.1] - 2025-02-13
+## [2.0.6] - 2025-05-08
 
 ### Added:
-- `headers` build the c contracts using local header files.
-
-## [2.0.2] - 2025-02-16
-
-### Fix:
-- `headers` build the c contracts using local header files.
-
-## [2.0.3] - 2025-02-21
-
-### Fix:
-- `headers` header args error.
+- `--functions` flag to allow for building hooks and functional hooks
 
 ## [2.0.4] - 2025-02-25
 
 ### Rename:
 - `js2wasm` -> `js2qjsc`
 
-## [2.0.6] - 2025-05-08
+## [2.0.3] - 2025-02-21
+
+### Fix:
+- `headers` header args error.
+
+## [2.0.2] - 2025-02-16
+
+### Fix:
+- `headers` build the c contracts using local header files.
+
+## [2.0.1] - 2025-02-13
 
 ### Added:
-- `--functions` flag to allow for building hooks and functional hooks
+- `headers` build the c contracts using local header files.
 
+## [2.0.0] - 2025-01-22
+
+### Updated:
+- Renamed `hooks-toolkit-cli` to `hooks-cli`

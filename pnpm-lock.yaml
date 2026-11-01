@@ -25,7 +25,7 @@ importers:
         version: 4.4.0
       ws:
         specifier: ^8.18.0
-        version: 8.18.0
+        version: 8.22.0
     devDependencies:
       '@biomejs/biome':
         specifier: 2.5.15
@@ -38,7 +38,7 @@ importers:
         version: 24.13.3
       '@types/ws':
         specifier: ^8.5.14
-        version: 8.5.14
+        version: 8.18.2
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -275,8 +275,8 @@ packages:
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
-  '@types/ws@8.5.14':
-    resolution: {integrity: sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw==}
+  '@types/ws@8.18.2':
+    resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
 
   '@wasm-idle/core@1.1.1':
     resolution: {integrity: sha512-jLSz31FEE1/yBbSDxlWXoviXdhJpGoQpSZI6UsUlhRTD7uCmQMmMK6UeMdxf0njzyk7uy8TvF0mffJKIBljW/w==}
@@ -368,8 +368,8 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  ws@8.18.0:
-    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
+  ws@8.22.0:
+    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -508,7 +508,7 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
-  '@types/ws@8.5.14':
+  '@types/ws@8.18.2':
     dependencies:
       '@types/node': 24.13.3
 
@@ -609,4 +609,4 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  ws@8.18.0: {}
+  ws@8.22.0: {}
